@@ -1,0 +1,26 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "WABA_ID",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "contacts": [{ "profile": { "name": "Priya Sharma" }, "wa_id": "6421555010" }],
+            "messages": [
+              {
+                "from": "6421555010",
+                "id": "wamid.TEST",
+                "timestamp": "1718000000",
+                "text": { "body": "Is parking available at the venue?" },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}

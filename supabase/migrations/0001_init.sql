@@ -1,0 +1,2 @@
+-- Initial migration placeholder. Apply supabase/seed.sql contents here when
+-- wiring Supabase. Managed via the Supabase CLI: supabase db push.
