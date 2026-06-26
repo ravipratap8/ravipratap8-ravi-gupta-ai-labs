@@ -8,6 +8,10 @@ export const metadata = {
   description:
     'Ravi Gupta - Senior Technology & Delivery Leader in Auckland, NZ. Test Lead, AI Solutions Builder and Quality Engineering Leader. Featuring the AI EventOps Assistant.',
   metadataBase: new URL('https://ravigupta.dev'),
+  icons: {
+  icon: '/icon.png',
+  apple: '/apple-icon.png',
+},
   openGraph: {
     title: 'Ravi Gupta — AI Labs',
     description: 'Test Leader • AI Solutions Builder • Quality Engineering',
