@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 import {
   ArrowRight,
   Bot,
@@ -11,6 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Volume2,
   Workflow,
   XCircle,
 } from 'lucide-react'
@@ -23,6 +27,8 @@ const demoFlow = [
     title: 'Review event knowledge',
     description:
       'Events act as the AI knowledge base. Draft replies are grounded in event details such as venue, date, policy notes, and FAQs.',
+    coach:
+      'This step demonstrates context grounding. The AI should not answer like a generic chatbot. It uses stored event information such as date, venue, FAQs, and policy notes before drafting a response.',
     link: '/dashboard/events',
     linkText: 'Open Events',
     icon: Database,
@@ -32,6 +38,8 @@ const demoFlow = [
     title: 'Add a sample enquiry',
     description:
       'The AI Inbox simulates a customer enquiry. The system classifies the message, generates a draft reply, assigns risk, and stores confidence.',
+    coach:
+      'This step demonstrates the AI workflow. A customer message is received, classified, risk assessed, given a confidence score, and converted into a draft response for review.',
     link: '/dashboard/inbox',
     linkText: 'Open AI Inbox',
     icon: Bot,
@@ -41,6 +49,8 @@ const demoFlow = [
     title: 'Review AI response',
     description:
       'The AI draft is visible for review. It is not sent automatically. High-risk items such as refunds and complaints are queued for human approval.',
+    coach:
+      'This step demonstrates safe AI review. The AI can draft a response, but the system does not send it automatically. A human can inspect the content, risk, and confidence before action.',
     link: '/dashboard/approvals',
     linkText: 'Open Approvals',
     icon: ClipboardCheck,
@@ -50,6 +60,8 @@ const demoFlow = [
     title: 'Approve or reject',
     description:
       'A human user remains in control. The draft can be approved, edited, or rejected before any follow-up action.',
+    coach:
+      'This step demonstrates human-in-the-loop control. The human can approve, edit, or reject the AI draft. This is important for refunds, complaints, and policy-sensitive messages.',
     link: '/dashboard/approvals',
     linkText: 'Review Drafts',
     icon: CheckCircle2,
@@ -59,6 +71,8 @@ const demoFlow = [
     title: 'Check governance',
     description:
       'The governance view explains risk controls, audit logging, prompt safety, human approval, and AI test controls.',
+    coach:
+      'This step demonstrates AI governance. The system records AI activity, approval decisions, model source, confidence, risk level, and audit events so the workflow is explainable and testable.',
     link: '/dashboard/governance',
     linkText: 'Open Governance',
     icon: ShieldCheck,
@@ -70,36 +84,48 @@ const principles = [
     title: 'Context grounding',
     description:
       'AI output is based on stored event information rather than a generic chatbot answer.',
+    coach:
+      'Context grounding means the AI response is based on business data already stored in the system, such as event details, venue, date, and organiser policy.',
     icon: Database,
   },
   {
     title: 'Classification',
     description:
       'Incoming enquiries are classified into categories such as Refund, Ticketing, Sponsorship, Complaint, or General.',
+    coach:
+      'Classification helps the workflow decide what type of enquiry this is. For example, a refund request can be handled differently from a parking question or sponsorship enquiry.',
     icon: Route,
   },
   {
     title: 'Confidence scoring',
     description:
       'Each AI draft includes a confidence score to support review, triage, and decision-making.',
+    coach:
+      'Confidence scoring helps reviewers understand how certain the AI is. Lower confidence items can be flagged for closer human review.',
     icon: Gauge,
   },
   {
     title: 'Risk assessment',
     description:
       'Refunds, complaints, payment-sensitive, policy-sensitive, or unclear messages are treated as higher risk.',
+    coach:
+      'Risk assessment prevents unsafe automation. Sensitive items such as refunds, complaints, payment questions, and policy commitments should require human review.',
     icon: ShieldAlert,
   },
   {
     title: 'Human-in-the-loop',
     description:
       'AI drafts the response, but a human must approve, edit, or reject it before follow-up.',
+    coach:
+      'Human-in-the-loop means AI supports the workflow, but the final decision remains with a person. This is the core safety principle in this demo.',
     icon: ClipboardCheck,
   },
   {
     title: 'Auditability',
     description:
       'AI actions and approval decisions are logged so the workflow is traceable and explainable.',
+    coach:
+      'Auditability means each important AI action is recorded. This helps with governance, testing, accountability, and future enterprise review.',
     icon: Workflow,
   },
 ]
@@ -123,7 +149,43 @@ const disabledActions = [
   'High-risk actions require human review.',
 ]
 
+function speak(text) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return
+
+  window.speechSynthesis.cancel()
+
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.rate = 0.95
+  utterance.pitch = 1
+  utterance.volume = 1
+
+  window.speechSynthesis.speak(utterance)
+}
+
+function stopSpeaking() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+}
+
+function ExplainButton({ text }) {
+  return (
+    <button
+      type="button"
+      onClick={() => speak(text)}
+      className="inline-flex items-center gap-1 rounded-full border border-cyan-300 bg-cyan-50 px-2.5 py-1 text-[11px] font-semibold text-cyan-800 transition hover:bg-cyan-100"
+    >
+      <Volume2 className="h-3 w-3" />
+      Explain
+    </button>
+  )
+}
+
 export default function DemoGuidePage() {
+  const [coachText, setCoachText] = useState(
+    'Hover over any demo card to understand what AI capability or governance principle it demonstrates. Click Explain to hear the explanation.'
+  )
+  const [coachTitle, setCoachTitle] = useState('Demo Coach')
+
   return (
     <div>
       <PageHeader
@@ -156,7 +218,18 @@ export default function DemoGuidePage() {
             const Icon = item.icon
 
             return (
-              <div key={item.step} className="rounded-2xl border bg-card p-4 shadow-sm">
+              <div
+                key={item.step}
+                onMouseEnter={() => {
+                  setCoachTitle(item.title)
+                  setCoachText(item.coach)
+                }}
+                onFocus={() => {
+                  setCoachTitle(item.title)
+                  setCoachText(item.coach)
+                }}
+                className="rounded-2xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
+              >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-cyan-100 text-sm font-bold text-cyan-700">
                     {item.step}
@@ -169,12 +242,16 @@ export default function DemoGuidePage() {
                   {item.description}
                 </p>
 
-                <Button asChild variant="outline" size="sm" className="mt-4 w-full">
-                  <Link href={item.link}>
-                    {item.linkText}
-                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                  </Link>
-                </Button>
+                <div className="mt-4 flex items-center gap-2">
+                  <ExplainButton text={item.coach} />
+
+                  <Button asChild variant="outline" size="sm" className="flex-1">
+                    <Link href={item.link}>
+                      {item.linkText}
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             )
           })}
@@ -192,7 +269,18 @@ export default function DemoGuidePage() {
             const Icon = item.icon
 
             return (
-              <div key={item.title} className="rounded-2xl border bg-card p-4 shadow-sm">
+              <div
+                key={item.title}
+                onMouseEnter={() => {
+                  setCoachTitle(item.title)
+                  setCoachText(item.coach)
+                }}
+                onFocus={() => {
+                  setCoachTitle(item.title)
+                  setCoachText(item.coach)
+                }}
+                className="rounded-2xl border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
+              >
                 <div className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-muted">
                   <Icon className="h-5 w-5 text-cyan-500" />
                 </div>
@@ -201,6 +289,10 @@ export default function DemoGuidePage() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {item.description}
                 </p>
+
+                <div className="mt-4">
+                  <ExplainButton text={item.coach} />
+                </div>
               </div>
             )
           })}
@@ -268,6 +360,40 @@ export default function DemoGuidePage() {
           </div>
         </div>
       </section>
+
+      <div className="fixed bottom-24 right-6 z-40 hidden w-80 rounded-2xl border border-cyan-200 bg-card p-4 shadow-2xl lg:block">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-cyan-100 text-cyan-700">
+              <Bot className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{coachTitle}</p>
+              <p className="text-[11px] text-muted-foreground">Hover card or click Explain</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={stopSpeaking}
+            className="rounded-full border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted"
+          >
+            Stop
+          </button>
+        </div>
+
+        <p className="text-xs leading-relaxed text-muted-foreground">{coachText}</p>
+
+        <Button
+          type="button"
+          size="sm"
+          className="mt-3 w-full bg-cyan-500 hover:bg-cyan-600"
+          onClick={() => speak(coachText)}
+        >
+          <Volume2 className="mr-1.5 h-4 w-4" />
+          Explain this
+        </Button>
+      </div>
     </div>
   )
 }
