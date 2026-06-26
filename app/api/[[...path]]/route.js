@@ -653,15 +653,54 @@ export async function GET(request, context) {
     }
 
     if (path[0] === 'approvals') {
-      const { data, error } = await ctx.supabase
-        .from('ai_approvals')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
+  const { data, error } = await ctx.supabase
+    .from('ai_approvals')
+    .select(`
+      *,
+      messages (
+        id,
+        customer_name,
+        customer_channel,
+        customer_message,
+        category,
+        risk_level,
+        confidence,
+        ai_draft,
+        status,
+        event_id,
+        events (
+          id,
+          title,
+          name,
+          venue,
+          city,
+          event_date,
+          starts_at
+        )
+      )
+    `)
+    .eq('workspace_id', workspaceId)
+    .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return ok((data || []).map(mapApproval));
-    }
+  if (error) throw error;
+
+  return ok(
+    (data || []).map((row) => ({
+      ...mapApproval(row),
+      message: row.messages
+        ? mapMessage(row.messages)
+        : null,
+      event: row.messages?.events
+        ? mapEvent(row.messages.events)
+        : null,
+      customerName: row.messages?.customer_name || 'Customer',
+      customerMessage: row.messages?.customer_message || '',
+      category: row.messages?.category || 'General',
+      aiDraft: row.ai_output || row.messages?.ai_draft || '',
+      aiOutput: row.ai_output || row.messages?.ai_draft || '',
+    }))
+  );
+}
 
     if (path[0] === 'leads') {
       const { data, error } = await ctx.supabase
