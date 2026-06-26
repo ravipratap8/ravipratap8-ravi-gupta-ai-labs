@@ -652,7 +652,7 @@ export async function GET(request, context) {
       return ok((data || []).map(mapMessage));
     }
 
-    if (path[0] === 'approvals') {
+if (path[0] === 'approvals') {
   const { data, error } = await ctx.supabase
     .from('ai_approvals')
     .select(`
@@ -685,20 +685,42 @@ export async function GET(request, context) {
   if (error) throw error;
 
   return ok(
-    (data || []).map((row) => ({
-      ...mapApproval(row),
-      message: row.messages
-        ? mapMessage(row.messages)
-        : null,
-      event: row.messages?.events
-        ? mapEvent(row.messages.events)
-        : null,
-      customerName: row.messages?.customer_name || 'Customer',
-      customerMessage: row.messages?.customer_message || '',
-      category: row.messages?.category || 'General',
-      aiDraft: row.ai_output || row.messages?.ai_draft || '',
-      aiOutput: row.ai_output || row.messages?.ai_draft || '',
-    }))
+    (data || []).map((row) => {
+      const linkedMessage = row.messages ? mapMessage(row.messages) : null;
+      const linkedEvent = row.messages?.events ? mapEvent(row.messages.events) : null;
+
+      const customerMessage =
+        row.messages?.customer_message ||
+        linkedMessage?.customerMessage ||
+        'No incoming message captured';
+
+      const aiDraft =
+        row.ai_output ||
+        row.messages?.ai_draft ||
+        linkedMessage?.aiDraft ||
+        'No AI draft captured';
+
+      return {
+        ...mapApproval(row),
+
+        // Keep message as text so React does not crash.
+        message: customerMessage,
+
+        // Keep linked object separately if UI needs it later.
+        linkedMessage,
+        event: linkedEvent,
+
+        eventName: linkedEvent?.title || linkedEvent?.name || 'No sample event linked',
+        customerName: row.messages?.customer_name || 'Customer',
+        customerMessage,
+        customerChannel: row.messages?.customer_channel || 'demo',
+        category: row.messages?.category || 'General',
+        riskLevel: row.risk_level || row.messages?.risk_level || 'medium',
+        confidence: row.confidence || row.messages?.confidence || 0,
+        aiDraft,
+        aiOutput: aiDraft,
+      };
+    })
   );
 }
 
