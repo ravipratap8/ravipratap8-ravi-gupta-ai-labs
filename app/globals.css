@@ -108,3 +108,20 @@
     border-radius: 9999px;
   }
 }
+@layer base {
+  html,
+  body {
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-width: 320px;
+  }
+}
+
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}

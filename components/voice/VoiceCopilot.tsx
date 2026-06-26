@@ -6,7 +6,11 @@ import VoiceButton from './VoiceButton'
 import VoiceCommandPanel from './VoiceCommandPanel'
 import { voiceConfig } from '@/lib/voice/voiceConfig'
 import { routeCommand, getHelpCommands } from '@/lib/voice/intentRouter'
-import { createSpeechRecognizer, isSpeechRecognitionSupported, type SpeechRecognizer } from '@/lib/voice/speechToText'
+import {
+  createSpeechRecognizer,
+  isSpeechRecognitionSupported,
+  type SpeechRecognizer,
+} from '@/lib/voice/speechToText'
 import { speak, cancelSpeech } from '@/lib/voice/textToSpeech'
 import { queueVoiceAction } from '@/lib/voice/voiceActions'
 import type { VoiceCommandResult, VoiceStatus } from '@/lib/voice/types'
@@ -22,7 +26,9 @@ export default function VoiceCopilot() {
   const [result, setResult] = useState<VoiceCommandResult | null>(null)
   const [lastAction, setLastAction] = useState('')
   const [error, setError] = useState('')
-  const [speakReplies, setSpeakReplies] = useState<boolean>(voiceConfig.defaultSpeakReplies)
+  const [speakReplies, setSpeakReplies] = useState<boolean>(
+    voiceConfig.defaultSpeakReplies
+  )
   const [pendingConfirm, setPendingConfirm] = useState(false)
   const [sttSupported, setSttSupported] = useState(false)
 
@@ -34,7 +40,7 @@ export default function VoiceCopilot() {
     (text: string) => {
       if (speakReplies) speak(text, voiceConfig.lang)
     },
-    [speakReplies],
+    [speakReplies]
   )
 
   const execute = useCallback(
@@ -47,49 +53,71 @@ export default function VoiceCopilot() {
           if (data.target) router.push(data.target)
           setLastAction(`Navigated to ${data.target ?? ''}`)
           break
+
         case 'generate_content':
-          queueVoiceAction({ actionType: data.actionType, intent: data.intent, payload: data.payload })
+          queueVoiceAction({
+            actionType: data.actionType,
+            intent: data.intent,
+            payload: data.payload,
+          })
           router.push(data.target ?? '/dashboard/ai-content')
           setLastAction(`Generating ${data.payload?.contentType ?? 'content'}`)
           break
+
         case 'enquiry':
-          queueVoiceAction({ actionType: data.actionType, intent: data.intent, payload: data.payload })
+          queueVoiceAction({
+            actionType: data.actionType,
+            intent: data.intent,
+            payload: data.payload,
+          })
           router.push(data.target ?? '/dashboard/inbox')
           setLastAction('Opened enquiry composer')
           break
+
         case 'approval':
-          // Human-in-the-loop: only reached AFTER explicit confirmation.
-          queueVoiceAction({ actionType: data.actionType, intent: data.intent, payload: data.payload })
+          queueVoiceAction({
+            actionType: data.actionType,
+            intent: data.intent,
+            payload: data.payload,
+          })
           router.push(data.target ?? '/dashboard/approvals')
-          setLastAction(`${data.payload?.decision === 'reject' ? 'Rejecting' : 'Approving'} top reply (confirm on page)`)
+          setLastAction(
+            `${data.payload?.decision === 'reject' ? 'Rejecting' : 'Approving'} top reply`
+          )
           break
+
         case 'help':
           setLastAction('Showed available commands')
           break
+
         default:
           setLastAction('')
       }
+
       setStatus('done')
     },
-    [router, maybeSpeak],
+    [router, maybeSpeak]
   )
 
   const process = useCallback(
     async (text: string) => {
       setStatus('processing')
       setError('')
+
       let data: VoiceCommandResult
+
       try {
         const res = await fetch('/api/voice/command', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript: text }),
         })
+
         data = (await res.json()) as VoiceCommandResult
       } catch {
-        // Resilient local fallback if the API is unreachable.
         data = routeCommand(text)
       }
+
       setResult(data)
 
       if (data.success && data.requiresConfirmation) {
@@ -98,9 +126,10 @@ export default function VoiceCopilot() {
         maybeSpeak(data.response)
         return
       }
+
       execute(data)
     },
-    [execute, maybeSpeak],
+    [execute, maybeSpeak]
   )
 
   const startListening = useCallback(() => {
@@ -108,11 +137,16 @@ export default function VoiceCopilot() {
     setTranscript('')
     setResult(null)
     setPendingConfirm(false)
+
     if (!sttSupported) {
+      setOpen(true)
       setError('Speech recognition is not supported here. Type your command instead.')
       return
     }
+
+    setOpen(true)
     setStatus('listening')
+
     recognizerRef.current = createSpeechRecognizer(voiceConfig.lang, {
       onResult: (t: string) => {
         setTranscript(t)
@@ -120,12 +154,17 @@ export default function VoiceCopilot() {
       },
       onError: (e: string) => {
         setStatus('error')
-        setError(e === 'not-allowed' ? 'Microphone permission denied.' : `Could not capture audio (${e}). Type instead.`)
+        setError(
+          e === 'not-allowed'
+            ? 'Microphone permission denied.'
+            : `Could not capture audio (${e}). Type instead.`
+        )
       },
       onEnd: () => {
         setStatus((s) => (s === 'listening' ? 'idle' : s))
       },
     })
+
     recognizerRef.current.start()
   }, [sttSupported, process])
 
@@ -134,7 +173,7 @@ export default function VoiceCopilot() {
       setTranscript(text)
       void process(text)
     },
-    [process],
+    [process]
   )
 
   const onConfirm = useCallback(() => {
@@ -148,32 +187,37 @@ export default function VoiceCopilot() {
 
   const openCopilot = useCallback(() => {
     setOpen(true)
-    if (sttSupported) startListening()
+
+    if (sttSupported) {
+      startListening()
+    }
   }, [sttSupported, startListening])
 
-  // Only render on dashboard routes, and only when enabled.
   if (!voiceConfig.enabled || !pathname?.startsWith('/dashboard')) return null
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-      <VoiceCommandPanel
-        open={open}
-        status={status}
-        transcript={transcript}
-        result={result}
-        lastAction={lastAction}
-        error={error}
-        sttSupported={sttSupported}
-        speakReplies={speakReplies}
-        pendingConfirm={pendingConfirm}
-        helpCommands={getHelpCommands()}
-        onClose={() => setOpen(false)}
-        onStartListening={startListening}
-        onSubmitText={submitText}
-        onToggleSpeak={onToggleSpeak}
-        onConfirm={onConfirm}
-        onCancelConfirm={() => setPendingConfirm(false)}
-      />
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-4 right-4 z-[60] flex flex-col items-end gap-3 sm:left-auto sm:right-6 sm:bottom-6">
+      <div className="w-full sm:w-auto">
+        <VoiceCommandPanel
+          open={open}
+          status={status}
+          transcript={transcript}
+          result={result}
+          lastAction={lastAction}
+          error={error}
+          sttSupported={sttSupported}
+          speakReplies={speakReplies}
+          pendingConfirm={pendingConfirm}
+          helpCommands={getHelpCommands()}
+          onClose={() => setOpen(false)}
+          onStartListening={startListening}
+          onSubmitText={submitText}
+          onToggleSpeak={onToggleSpeak}
+          onConfirm={onConfirm}
+          onCancelConfirm={() => setPendingConfirm(false)}
+        />
+      </div>
+
       <VoiceButton listening={status === 'listening'} onClick={open ? () => setOpen(false) : openCopilot} />
     </div>
   )

@@ -96,14 +96,14 @@ function NavLinks({ counts, onNavigate }) {
           >
             <Icon
               className={cn(
-                'h-[18px] w-[18px]',
+                'h-[18px] w-[18px] shrink-0',
                 active
                   ? 'text-cyan-400'
                   : 'text-sidebar-foreground group-hover:text-cyan-400'
               )}
             />
 
-            <span className="flex-1">{item.label}</span>
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
 
             {badge ? (
               <span className="rounded-full bg-cyan-400 px-1.5 py-0.5 text-[10px] font-bold text-slate-950">
@@ -121,13 +121,13 @@ function SidebarInner({ counts, onNavigate }) {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <Link href="/" className="flex items-center gap-2.5 px-5 py-5">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-sm font-bold text-slate-950">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-sm font-bold text-slate-950">
           RG
         </span>
 
-        <div className="leading-tight">
-          <p className="font-display text-sm font-bold text-white">EventOps</p>
-          <p className="text-[11px] text-cyan-400">AI Assistant</p>
+        <div className="min-w-0 leading-tight">
+          <p className="truncate font-display text-sm font-bold text-white">EventOps</p>
+          <p className="truncate text-[11px] text-cyan-400">AI Assistant</p>
         </div>
       </Link>
 
@@ -208,6 +208,7 @@ export default function DashboardShell({ children, profile, workspace }) {
 
   useEffect(() => {
     const refreshCounts = () => loadCounts();
+
     const refreshOnVisible = () => {
       if (document.visibilityState === 'visible') loadCounts();
     };
@@ -231,71 +232,86 @@ export default function DashboardShell({ children, profile, workspace }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh overflow-x-hidden bg-background">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-sidebar-border md:block">
         <SidebarInner counts={counts} />
       </aside>
 
-      <div className="md:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-card/80 px-4 backdrop-blur md:px-8">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
+      <div className="min-w-0 md:pl-64">
+        <header className="sticky top-0 z-20 border-b bg-card/90 backdrop-blur">
+          <div className="flex min-h-16 items-center gap-2 px-3 py-2 md:px-8">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 md:hidden"
+                  aria-label="Open navigation"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
 
-            <SheetContent side="left" className="w-64 border-0 p-0">
-              <SidebarInner counts={counts} onNavigate={() => setOpen(false)} />
-            </SheetContent>
-          </Sheet>
+              <SheetContent side="left" className="w-64 border-0 p-0">
+                <SidebarInner counts={counts} onNavigate={() => setOpen(false)} />
+              </SheetContent>
+            </Sheet>
 
-          <div className="flex-1">
-            <p className="font-display text-sm font-semibold text-foreground">
-              AI EventOps Assistant
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {workspaceName} • Supabase workspace
-            </p>
-          </div>
-
-          <ThemeToggle />
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative"
-            onClick={loadCounts}
-            title="Refresh notification counts"
-          >
-            <Bell className="h-4 w-4" />
-            {counts.approvals ? (
-              <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                {counts.approvals}
-              </span>
-            ) : null}
-          </Button>
-
-          <div className="flex items-center gap-2 rounded-full border bg-card py-1 pl-1 pr-3">
-            <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-sky-600 text-[11px] font-bold text-slate-950">
-              {initials}
-            </div>
-
-            <div className="hidden text-left leading-tight sm:block">
-              <p className="max-w-52 truncate text-xs font-semibold text-foreground">
-                {displayEmail || displayName}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-sm font-semibold text-foreground">
+                AI EventOps Assistant
               </p>
-              <p className="text-[10px] text-muted-foreground">{displayRole}</p>
+              <p className="hidden truncate text-xs text-muted-foreground sm:block">
+                {workspaceName} • Supabase workspace
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <ThemeToggle />
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative h-10 w-10"
+                onClick={loadCounts}
+                title="Refresh notification counts"
+              >
+                <Bell className="h-4 w-4" />
+                {counts.approvals ? (
+                  <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                    {counts.approvals}
+                  </span>
+                ) : null}
+              </Button>
+
+              <div className="flex max-w-[42px] items-center gap-2 rounded-full border bg-card py-1 pl-1 pr-1 sm:max-w-[260px] sm:pr-3">
+                <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-sky-600 text-[11px] font-bold text-slate-950">
+                  {initials}
+                </div>
+
+                <div className="hidden min-w-0 text-left leading-tight sm:block">
+                  <p className="max-w-44 truncate text-xs font-semibold text-foreground lg:max-w-52">
+                    {displayEmail || displayName}
+                  </p>
+                  <p className="truncate text-[10px] text-muted-foreground">{displayRole}</p>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="h-10 w-10 px-0 sm:w-auto sm:px-3"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
             </div>
           </div>
-
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="mr-1.5 h-4 w-4" />
-            Logout
-          </Button>
         </header>
 
-        <main className="p-4 md:p-8">{children}</main>
+        <main className="min-w-0 p-4 pb-28 md:p-8 md:pb-8">{children}</main>
       </div>
 
       <VoiceCopilot />
