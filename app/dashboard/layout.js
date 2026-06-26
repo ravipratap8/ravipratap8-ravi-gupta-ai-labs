@@ -1,17 +1,17 @@
-import { redirect } from 'next/navigation'
-import DashboardShell from '@/components/dashboard/shell'
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation';
+import DashboardShell from '@/components/dashboard/shell';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function DashboardLayout({ children }) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect('/login');
   }
 
-  return <DashboardShell>{children}</DashboardShell>
+  return <DashboardShell>{children}</DashboardShell>;
 }
