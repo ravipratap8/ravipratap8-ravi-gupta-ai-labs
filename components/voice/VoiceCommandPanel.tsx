@@ -58,10 +58,10 @@ export default function VoiceCommandPanel(props: Props) {
   const confidencePct = props.result ? Math.round(props.result.confidence * 100) : 0
 
   return (
-    <div className="flex max-h-[min(72dvh,560px)] w-full max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:w-[360px] sm:max-w-[calc(100vw-2rem)]">
-      <div className="flex shrink-0 items-center justify-between bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white">
+    <div className="flex max-h-[78dvh] w-full max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:w-[380px] sm:max-w-[calc(100vw-2rem)]">
+      <div className="flex shrink-0 items-center justify-between gap-2 bg-gradient-to-r from-slate-900 to-slate-800 px-3 py-3 text-white sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-cyan-400/20 text-cyan-300">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-cyan-400/20 text-cyan-300">
             <Sparkles className="h-4 w-4" />
           </span>
 
@@ -73,14 +73,71 @@ export default function VoiceCommandPanel(props: Props) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={props.onClose}
-          aria-label="Close voice copilot"
-          className="ml-3 grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-300 hover:bg-white/10 hover:text-white"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={props.onStartListening}
+            disabled={!props.sttSupported}
+            className="h-8 rounded-full bg-cyan-400 px-3 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-40"
+          >
+            <Mic className="mr-1 h-3.5 w-3.5" />
+            Speak
+          </Button>
+
+          <button
+            type="button"
+            onClick={props.onClose}
+            aria-label="Close voice copilot"
+            className="grid h-8 w-8 place-items-center rounded-full text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="shrink-0 border-b bg-card/95 p-3">
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            onClick={props.onStartListening}
+            disabled={!props.sttSupported}
+            className="h-11 w-full bg-cyan-500 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-40"
+          >
+            <Mic className="mr-2 h-4 w-4" />
+            {props.status === 'listening' ? 'Listening...' : 'Start speaking'}
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <Input
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              onKeyDown={(event) => event.key === 'Enter' && submit()}
+              placeholder={
+                props.sttSupported
+                  ? 'Or type: open approvals'
+                  : 'Type command, e.g. open approvals'
+              }
+              className="h-10 min-w-0"
+            />
+
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              onClick={submit}
+              className="h-10 w-10 shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {!props.sttSupported ? (
+            <p className="text-[11px] text-muted-foreground">
+              Speech recognition is unavailable in this browser. Type your command instead.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 scrollbar-thin sm:p-4">
@@ -93,7 +150,7 @@ export default function VoiceCommandPanel(props: Props) {
             ) : (
               <VolumeX className="h-3.5 w-3.5" />
             )}
-            <span className="hidden xs:inline">Voice replies</span>
+            <span>Voice replies</span>
             <Switch checked={props.speakReplies} onCheckedChange={props.onToggleSpeak} />
           </label>
         </div>
@@ -196,7 +253,7 @@ export default function VoiceCommandPanel(props: Props) {
         </button>
 
         {showHelp && (
-          <div className="max-h-36 space-y-1 overflow-y-auto rounded-lg border bg-muted p-2 scrollbar-thin">
+          <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border bg-muted p-2 scrollbar-thin">
             {props.helpCommands.map((item) => (
               <div
                 key={item.label}
@@ -214,53 +271,6 @@ export default function VoiceCommandPanel(props: Props) {
           Voice safety: click-to-speak only, no always-on listening, no automatic customer
           messaging, and human approval stays mandatory.
         </div>
-      </div>
-
-      <div className="shrink-0 border-t bg-card/95 p-3 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="icon"
-            onClick={props.onStartListening}
-            disabled={!props.sttSupported}
-            title={
-              props.sttSupported
-                ? 'Start listening'
-                : 'Speech recognition not supported — type instead'
-            }
-            className="h-10 w-10 shrink-0 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-40"
-          >
-            <Mic className="h-4 w-4" />
-          </Button>
-
-          <Input
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            onKeyDown={(event) => event.key === 'Enter' && submit()}
-            placeholder={
-              props.sttSupported
-                ? 'Type a command...'
-                : 'Type command, e.g. open approvals'
-            }
-            className="h-10 min-w-0"
-          />
-
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            onClick={submit}
-            className="h-10 w-10 shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {!props.sttSupported ? (
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Speech recognition is unavailable in this browser. The text command box works as a fallback.
-          </p>
-        ) : null}
       </div>
     </div>
   )
