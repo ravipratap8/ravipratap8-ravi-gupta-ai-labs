@@ -24,8 +24,21 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 
+const DASHBOARD_STATS_REFRESH_EVENT = 'eventops:stats-refresh'
+
+function refreshDashboardBadges() {
+  if (typeof window === 'undefined') return
+
+  window.dispatchEvent(new CustomEvent(DASHBOARD_STATS_REFRESH_EVENT))
+
+  window.setTimeout(() => {
+    window.dispatchEvent(new CustomEvent(DASHBOARD_STATS_REFRESH_EVENT))
+  }, 500)
+}
+
 function normaliseApproval(item) {
   const linkedMessage = item.linkedMessage || item.messageObject || null
+
   const messageText =
     item.customerMessage ||
     item.messageText ||
@@ -51,6 +64,7 @@ function normaliseApproval(item) {
       linkedMessage?.customerName ||
       linkedMessage?.customer_name ||
       'Customer',
+
     eventName:
       item.eventName ||
       item.event?.title ||
@@ -58,22 +72,20 @@ function normaliseApproval(item) {
       item.messages?.events?.title ||
       item.messages?.events?.name ||
       'No sample event linked',
+
     messageText,
     draftText,
+
     riskLevel:
       item.riskLevel ||
       item.risk_level ||
       linkedMessage?.riskLevel ||
       linkedMessage?.risk_level ||
       'medium',
-    category:
-      item.category ||
-      linkedMessage?.category ||
-      'General',
-    confidence:
-      item.confidence ??
-      linkedMessage?.confidence ??
-      0,
+
+    category: item.category || linkedMessage?.category || 'General',
+
+    confidence: item.confidence ?? linkedMessage?.confidence ?? 0,
   }
 }
 
@@ -87,17 +99,23 @@ export default function ApprovalsPage() {
     try {
       const data = await EventOps.approvals()
       setItems((data || []).map(normaliseApproval))
+      refreshDashboardBadges()
     } catch {
       setItems([])
+      refreshDashboardBadges()
     }
   }
 
   useEffect(() => {
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const pendingItems = useMemo(
-    () => (items || []).filter((item) => item.status !== 'approved' && item.status !== 'rejected'),
+    () =>
+      (items || []).filter(
+        (item) => item.status !== 'approved' && item.status !== 'rejected'
+      ),
     [items]
   )
 
@@ -105,6 +123,7 @@ export default function ApprovalsPage() {
 
   useEffect(() => {
     const action = consumeVoiceAction()
+
     if (action && action.actionType === 'approval' && action.payload?.decision) {
       setPendingDecision(action.payload.decision)
     }
@@ -113,10 +132,13 @@ export default function ApprovalsPage() {
   useEffect(() => {
     if (pendingDecision && pendingItems.length) {
       const first = pendingItems[0]
+
       if (pendingDecision === 'approve') approve(first, false)
       else reject(first)
+
       setPendingDecision(null)
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingDecision, pendingItems])
 
@@ -137,7 +159,10 @@ export default function ApprovalsPage() {
 
       setEditId(null)
       setEditText('')
+
       setItems((list) => (list || []).filter((item) => item.id !== approval.id))
+
+      refreshDashboardBadges()
 
       toast.success('Draft approved', {
         description: `AI draft for ${approval.customerName} approved for human-controlled follow-up.`,
@@ -158,6 +183,8 @@ export default function ApprovalsPage() {
       await EventOps.reject(approval.id)
 
       setItems((list) => (list || []).filter((item) => item.id !== approval.id))
+
+      refreshDashboardBadges()
 
       toast('Draft rejected', {
         description: 'Returned to the draft queue for review and rework.',
@@ -183,8 +210,10 @@ export default function ApprovalsPage() {
       <div className="mb-6 flex items-start gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
         <p>
-          <strong>{pendingItems.length}</strong> AI draft{pendingItems.length === 1 ? '' : 's'} awaiting review.
-          Higher-risk items such as complaints, refunds, or unclear policy questions are prioritised for human approval.
+          <strong>{pendingItems.length}</strong> AI draft
+          {pendingItems.length === 1 ? '' : 's'} awaiting review. Higher-risk
+          items such as complaints, refunds, or unclear policy questions are
+          prioritised for human approval.
         </p>
       </div>
 
@@ -197,28 +226,39 @@ export default function ApprovalsPage() {
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {pendingItems.map((approval) => (
-            <div key={approval.id} className="flex flex-col rounded-2xl border bg-card shadow-sm">
+            <div
+              key={approval.id}
+              className="flex flex-col rounded-2xl border bg-card shadow-sm"
+            >
               <div className="flex items-center justify-between border-b p-4">
                 <div>
-                  <p className="font-semibold text-foreground">{approval.customerName}</p>
-                  <p className="text-xs text-muted-foreground">{approval.eventName}</p>
+                  <p className="font-semibold text-foreground">
+                    {approval.customerName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {approval.eventName}
+                  </p>
                 </div>
+
                 <RiskBadge level={approval.riskLevel} />
               </div>
 
               <div className="space-y-3 p-4">
                 <div>
                   <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <MessageSquare className="h-3.5 w-3.5" /> Incoming message
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Incoming message
                   </p>
+
                   <p className="rounded-xl bg-muted p-3 text-sm text-foreground">
                     {approval.messageText}
                   </p>
                 </div>
 
                 <div>
-                  <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-cyan-700">
-                    <Bot className="h-3.5 w-3.5" /> AI-drafted response
+                  <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-cyan-700 dark:text-cyan-300">
+                    <Bot className="h-3.5 w-3.5" />
+                    AI-drafted response
                   </p>
 
                   {editId === approval.id ? (
@@ -229,7 +269,7 @@ export default function ApprovalsPage() {
                       className="text-sm"
                     />
                   ) : (
-                    <p className="whitespace-pre-wrap rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm text-foreground">
+                    <p className="whitespace-pre-wrap rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm font-medium text-slate-950 dark:border-cyan-900/60 dark:bg-cyan-950/30 dark:text-cyan-50">
                       {approval.draftText}
                     </p>
                   )}
@@ -287,7 +327,8 @@ export default function ApprovalsPage() {
                         setEditText(approval.draftText)
                       }}
                     >
-                      <Pencil className="mr-1.5 h-4 w-4" /> Edit
+                      <Pencil className="mr-1.5 h-4 w-4" />
+                      Edit
                     </Button>
 
                     <Button
@@ -297,7 +338,8 @@ export default function ApprovalsPage() {
                       className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                       onClick={() => reject(approval)}
                     >
-                      <X className="mr-1.5 h-4 w-4" /> Reject
+                      <X className="mr-1.5 h-4 w-4" />
+                      Reject
                     </Button>
                   </>
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/nav';
@@ -26,6 +26,8 @@ import {
   Cpu,
   LogOut,
 } from 'lucide-react';
+
+const DASHBOARD_STATS_REFRESH_EVENT = 'eventops:stats-refresh';
 
 const ICONS = {
   LayoutDashboard,
@@ -156,6 +158,7 @@ function SidebarInner({ counts, onNavigate }) {
 
 export default function DashboardShell({ children, profile, workspace }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [counts, setCounts] = useState({});
   const [open, setOpen] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
@@ -175,6 +178,22 @@ export default function DashboardShell({ children, profile, workspace }) {
   const workspaceName = workspace?.name || 'Workspace';
   const initials = getInitials(displayName);
 
+  const loadCounts = useCallback(async () => {
+    try {
+      const stats = await EventOps.stats();
+
+      setCounts({
+        inbox: stats?.newEnquiries || 0,
+        approvals: stats?.pendingApprovals || 0,
+      });
+    } catch {
+      setCounts({
+        inbox: 0,
+        approvals: 0,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -184,20 +203,25 @@ export default function DashboardShell({ children, profile, workspace }) {
   }, []);
 
   useEffect(() => {
-    EventOps.stats()
-      .then((stats) => {
-        setCounts({
-          inbox: stats?.newEnquiries || 0,
-          approvals: stats?.pendingApprovals || 0,
-        });
-      })
-      .catch(() => {
-        setCounts({
-          inbox: 0,
-          approvals: 0,
-        });
-      });
-  }, []);
+    loadCounts();
+  }, [loadCounts, pathname]);
+
+  useEffect(() => {
+    const refreshCounts = () => loadCounts();
+    const refreshOnVisible = () => {
+      if (document.visibilityState === 'visible') loadCounts();
+    };
+
+    window.addEventListener(DASHBOARD_STATS_REFRESH_EVENT, refreshCounts);
+    window.addEventListener('focus', refreshCounts);
+    document.addEventListener('visibilitychange', refreshOnVisible);
+
+    return () => {
+      window.removeEventListener(DASHBOARD_STATS_REFRESH_EVENT, refreshCounts);
+      window.removeEventListener('focus', refreshCounts);
+      document.removeEventListener('visibilitychange', refreshOnVisible);
+    };
+  }, [loadCounts]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -237,7 +261,13 @@ export default function DashboardShell({ children, profile, workspace }) {
 
           <ThemeToggle />
 
-          <Button variant="outline" size="icon" className="relative">
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative"
+            onClick={loadCounts}
+            title="Refresh notification counts"
+          >
             <Bell className="h-4 w-4" />
             {counts.approvals ? (
               <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
