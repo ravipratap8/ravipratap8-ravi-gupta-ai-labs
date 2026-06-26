@@ -10,7 +10,9 @@ import {
   Database,
   Gauge,
   Mic,
+  MessageCircle,
   Route,
+  Send,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -24,115 +26,125 @@ import { Button } from '@/components/ui/button'
 const demoFlow = [
   {
     step: '1',
-    title: 'Review event knowledge',
+    title: 'Receive WhatsApp enquiry',
     description:
-      'Events act as the AI knowledge base. Draft replies are grounded in event details such as venue, date, policy notes, and FAQs.',
+      'A customer message is received through WhatsApp Cloud API and routed into the AI Inbox for processing.',
     coach:
-      'This step demonstrates context grounding. The AI should not answer like a generic chatbot. It uses stored event information such as date, venue, FAQs, and policy notes before drafting a response.',
-    link: '/dashboard/events',
-    linkText: 'Open Events',
-    icon: Database,
+      'This step demonstrates real channel integration. WhatsApp is the inbound channel, while the AI workflow happens inside the application after the webhook receives the customer message.',
+    link: '/dashboard/inbox',
+    linkText: 'Open AI Inbox',
+    icon: MessageCircle,
   },
   {
     step: '2',
-    title: 'Add a sample enquiry',
+    title: 'Classify the message',
     description:
-      'The AI Inbox simulates a customer enquiry. The system classifies the message, generates a draft reply, assigns risk, and stores confidence.',
+      'The system identifies the enquiry type such as Ticketing, Refund, VIP, Complaint, Lead, Safety, or General.',
     coach:
-      'This step demonstrates the AI workflow. A customer message is received, classified, risk assessed, given a confidence score, and converted into a draft response for review.',
+      'This step demonstrates AI classification. The system analyses the customer message and assigns a category so the workflow can route it correctly.',
     link: '/dashboard/inbox',
-    linkText: 'Open AI Inbox',
-    icon: Bot,
+    linkText: 'Review Enquiries',
+    icon: Route,
   },
   {
     step: '3',
-    title: 'Review AI response',
+    title: 'Generate AI draft',
     description:
-      'The AI draft is visible for review. It is not sent automatically. High-risk items such as refunds and complaints are queued for human approval.',
+      'AI creates a grounded draft response using available event knowledge. The response is not sent automatically.',
     coach:
-      'This step demonstrates safe AI review. The AI can draft a response, but the system does not send it automatically. A human can inspect the content, risk, and confidence before action.',
+      'This step demonstrates grounded draft generation. The AI prepares a response using the available event context, but it is only a draft until a human reviews it.',
     link: '/dashboard/approvals',
     linkText: 'Open Approvals',
-    icon: ClipboardCheck,
+    icon: Bot,
   },
   {
     step: '4',
-    title: 'Approve or reject',
+    title: 'Approve, edit, or reject',
     description:
-      'A human user remains in control. The draft can be approved, edited, or rejected before any follow-up action.',
+      'A human reviewer remains in control and can approve, edit, or reject the AI-generated response.',
     coach:
-      'This step demonstrates human-in-the-loop control. The human can approve, edit, or reject the AI draft. This is important for refunds, complaints, and policy-sensitive messages.',
+      'This step demonstrates human-in-the-loop governance. The AI supports the workflow, but the final customer-facing decision remains with a person.',
     link: '/dashboard/approvals',
     linkText: 'Review Drafts',
-    icon: CheckCircle2,
+    icon: ClipboardCheck,
   },
   {
     step: '5',
-    title: 'Check governance',
+    title: 'Audit and governance',
     description:
-      'The governance view explains risk controls, audit logging, prompt safety, human approval, and AI test controls.',
+      'The workflow records AI activity, risk level, confidence score, approval decisions, and audit events.',
     coach:
-      'This step demonstrates AI governance. The system records AI activity, approval decisions, model source, confidence, risk level, and audit events so the workflow is explainable and testable.',
+      'This step demonstrates auditability. AI activity and approval decisions are recorded so the process can be reviewed, tested, and explained.',
     link: '/dashboard/governance',
     linkText: 'Open Governance',
     icon: ShieldCheck,
   },
 ]
 
-const principles = [
+const aiCapabilities = [
   {
-    title: 'Context grounding',
+    title: 'Message classification',
     description:
-      'AI output is based on stored event information rather than a generic chatbot answer.',
+      'AI identifies the intent and category of each enquiry, such as Ticketing, Refund, VIP, Complaint, Lead, or General.',
     coach:
-      'Context grounding means the AI response is based on business data already stored in the system, such as event details, venue, date, and organiser policy.',
-    icon: Database,
-  },
-  {
-    title: 'Classification',
-    description:
-      'Incoming enquiries are classified into categories such as Refund, Ticketing, Sponsorship, Complaint, or General.',
-    coach:
-      'Classification helps the workflow decide what type of enquiry this is. For example, a refund request can be handled differently from a parking question or sponsorship enquiry.',
+      'Classification helps the workflow understand what type of message has arrived and how carefully it should be handled.',
     icon: Route,
   },
   {
-    title: 'Confidence scoring',
+    title: 'Grounded draft generation',
     description:
-      'Each AI draft includes a confidence score to support review, triage, and decision-making.',
+      'AI creates a response using available event knowledge and avoids inventing unsupported event details.',
     coach:
-      'Confidence scoring helps reviewers understand how certain the AI is. Lower confidence items can be flagged for closer human review.',
-    icon: Gauge,
+      'Grounded generation means the draft should rely on known event data rather than making unsupported claims.',
+    icon: Database,
   },
   {
     title: 'Risk assessment',
     description:
-      'Refunds, complaints, payment-sensitive, policy-sensitive, or unclear messages are treated as higher risk.',
+      'Sensitive messages such as refunds, complaints, payment, safety, or policy questions are treated as higher risk.',
     coach:
-      'Risk assessment prevents unsafe automation. Sensitive items such as refunds, complaints, payment questions, and policy commitments should require human review.',
+      'Risk assessment is a key control. High-risk messages should be reviewed carefully before any customer-facing action.',
     icon: ShieldAlert,
   },
   {
-    title: 'Human-in-the-loop',
+    title: 'Confidence scoring',
     description:
-      'AI drafts the response, but a human must approve, edit, or reject it before follow-up.',
+      'Each AI output includes a confidence score to support review, triage, and decision-making.',
     coach:
-      'Human-in-the-loop means AI supports the workflow, but the final decision remains with a person. This is the core safety principle in this demo.',
+      'Confidence scoring helps reviewers understand how certain the AI appears to be and whether closer review is needed.',
+    icon: Gauge,
+  },
+  {
+    title: 'Human approval routing',
+    description:
+      'AI-generated drafts are routed into an approval queue instead of being sent automatically.',
+    coach:
+      'Human approval routing prevents unsafe automation. The AI drafts, but the human decides.',
     icon: ClipboardCheck,
   },
   {
-    title: 'Auditability',
+    title: 'Audit trail',
     description:
-      'AI actions and approval decisions are logged so the workflow is traceable and explainable.',
+      'Important AI actions and approval decisions are logged so the workflow remains traceable.',
     coach:
-      'Auditability means each important AI action is recorded. This helps with governance, testing, accountability, and future enterprise review.',
+      'Auditability supports governance, testing, accountability, and future enterprise review.',
     icon: Workflow,
   },
 ]
 
+const qaChecks = [
+  'WhatsApp webhook receives the message correctly.',
+  'AI Inbox record is created against the correct workspace.',
+  'Message category, risk level, and confidence score are generated.',
+  'AI draft is created and linked to an approval record.',
+  'Approve, edit, and reject actions update the workflow correctly.',
+  'Audit logs capture AI and approval activity.',
+  'High-risk messages remain human-controlled.',
+  'AI does not auto-send customer replies.',
+]
+
 const voiceCommands = [
   'Open dashboard',
-  'Open events',
   'Open AI inbox',
   'Open approvals',
   'Open governance',
@@ -144,9 +156,18 @@ const voiceCommands = [
 const disabledActions = [
   'AI does not auto-send customer replies.',
   'AI does not approve refunds or policy decisions.',
+  'AI does not make payment or legal commitments.',
   'AI does not delete records by voice command.',
   'Voice Copilot is click-to-speak, not always-on listening.',
   'High-risk actions require human review.',
+]
+
+const feedbackQuestions = [
+  'Are the risk categories meaningful for an enterprise workflow?',
+  'What additional governance controls should be added?',
+  'What QA checks would be expected before production use?',
+  'How should confidence thresholds influence workflow routing?',
+  'What would make this architecture more enterprise-ready?',
 ]
 
 function speak(text) {
@@ -182,15 +203,15 @@ function ExplainButton({ text }) {
 
 export default function DemoGuidePage() {
   const [coachText, setCoachText] = useState(
-    'Hover over any demo card to understand what AI capability or governance principle it demonstrates. Click Explain to hear the explanation.'
+    'Hover over any demo card to understand the AI workflow, governance control, or QA consideration it demonstrates. Click Explain to hear the explanation.'
   )
   const [coachTitle, setCoachTitle] = useState('Demo Coach')
 
   return (
     <div>
       <PageHeader
-        title="How to Try This Demo"
-        subtitle="A guided walkthrough of the AI EventOps workflow, AI governance controls, and human-in-the-loop design."
+        title="AI EventOps Demo Guide"
+        subtitle="From WhatsApp enquiry to governed AI response with human approval, risk scoring, confidence scoring, and auditability."
       />
 
       <div className="mb-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-5 text-sm text-cyan-950">
@@ -199,18 +220,54 @@ export default function DemoGuidePage() {
           <div>
             <p className="font-semibold">What this demo proves</p>
             <p className="mt-1 leading-relaxed">
-              This is not a simple chatbot wrapper. It demonstrates an enterprise-style AI workflow:
-              business context, AI classification, grounded draft generation, confidence scoring,
-              risk assessment, human approval, and audit logging.
+              This demo shows how AI can be embedded into a real business workflow, not just exposed
+              as a chatbot. A WhatsApp customer enquiry is received, classified by AI, converted into
+              a grounded draft response, scored for confidence and risk, routed for human approval,
+              and logged for auditability.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mb-8 grid gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-emerald-500" />
+            <h2 className="text-sm font-semibold text-foreground">WhatsApp status</h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            WhatsApp inbound integration is working in Meta developer test mode. It is suitable for
+            a controlled live demo using approved test recipient numbers.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-cyan-500" />
+            <h2 className="text-sm font-semibold text-foreground">Governance status</h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            AI drafts are not sent automatically. Human approval, edit, or rejection is required
+            before any customer-facing follow-up.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-2">
+            <Send className="h-5 w-5 text-amber-500" />
+            <h2 className="text-sm font-semibold text-foreground">Public trial note</h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Public self-service WhatsApp trial is not enabled yet. Selected reviewers can be added
+            manually as Meta test recipients if required.
+          </p>
         </div>
       </div>
 
       <section className="mb-8">
         <div className="mb-4 flex items-center gap-2">
           <Workflow className="h-5 w-5 text-cyan-500" />
-          <h2 className="text-xl font-semibold text-foreground">Recommended demo flow</h2>
+          <h2 className="text-xl font-semibold text-foreground">Recommended live demo flow</h2>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-5">
@@ -238,7 +295,7 @@ export default function DemoGuidePage() {
                 </div>
 
                 <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                <p className="mt-2 min-h-24 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 min-h-28 text-xs leading-relaxed text-muted-foreground">
                   {item.description}
                 </p>
 
@@ -260,12 +317,12 @@ export default function DemoGuidePage() {
 
       <section className="mb-8">
         <div className="mb-4 flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-xl font-semibold text-foreground">AI principles demonstrated</h2>
+          <Bot className="h-5 w-5 text-cyan-500" />
+          <h2 className="text-xl font-semibold text-foreground">Where AI is used</h2>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {principles.map((item) => {
+          {aiCapabilities.map((item) => {
             const Icon = item.icon
 
             return (
@@ -299,6 +356,54 @@ export default function DemoGuidePage() {
         </div>
       </section>
 
+      <div className="mb-8 grid gap-6 lg:grid-cols-2">
+        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <h2 className="text-lg font-semibold text-foreground">
+              QA and testing considerations
+            </h2>
+          </div>
+
+          <div className="space-y-2">
+            {qaChecks.map((item) => (
+              <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+            AI testing needs to cover behaviour, grounding, confidence, risk, approval traceability,
+            and integration reliability — not just whether text was generated.
+          </p>
+        </section>
+
+        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <XCircle className="h-5 w-5 text-rose-500" />
+            <h2 className="text-lg font-semibold text-foreground">
+              Intentionally not automated
+            </h2>
+          </div>
+
+          <div className="space-y-2">
+            {disabledActions.map((item) => (
+              <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+            These restrictions show deliberate safe AI design. The system supports decision-making,
+            but high-risk execution remains under human control.
+          </p>
+        </section>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
@@ -327,23 +432,20 @@ export default function DemoGuidePage() {
 
         <section className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
-            <XCircle className="h-5 w-5 text-rose-500" />
-            <h2 className="text-lg font-semibold text-foreground">Intentionally disabled</h2>
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-semibold text-foreground">
+              Feedback I am looking for
+            </h2>
           </div>
 
           <div className="space-y-2">
-            {disabledActions.map((item) => (
+            {feedbackQuestions.map((item) => (
               <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                 <span>{item}</span>
               </div>
             ))}
           </div>
-
-          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-            These restrictions show safe AI design: the system supports decision-making, but
-            high-risk execution remains under human control.
-          </p>
         </section>
       </div>
 
@@ -355,7 +457,8 @@ export default function DemoGuidePage() {
             <p className="mt-2 text-sm leading-relaxed">
               The same workflow can later be exposed as typed MCP tools such as create_event,
               search_event, classify_message, generate_customer_reply, approve_ai_reply,
-              generate_social_content, create_lead, and get_dashboard_metrics.
+              generate_social_content, create_lead, and get_dashboard_metrics. The long-term idea
+              is reusable AI workflow architecture across multiple business domains.
             </p>
           </div>
         </div>
