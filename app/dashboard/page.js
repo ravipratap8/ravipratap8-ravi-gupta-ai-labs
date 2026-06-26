@@ -27,32 +27,32 @@ const stats = {
   hotLeads: 4,
   totalLeads: 12,
   contentGenerated: 18,
-  aiSafety: {
-    status: 'All clear',
+  aiGovernance: {
+    status: 'Controlled',
     highRiskQueued: 1,
   },
   recentActivity: [
     {
       id: '1',
-      action: 'ai_reply_generated',
-      detail: 'AI generated a draft reply for a customer refund enquiry.',
-      actor: 'AI Assistant',
+      action: 'ai_reply_drafted',
+      detail: 'AI drafted a response for a high-risk attendee enquiry and queued it for human review.',
+      actor: 'AI EventOps Assistant',
       riskLevel: 'High',
       createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
     },
     {
       id: '2',
-      action: 'approval_pending',
-      detail: 'A sponsorship enquiry was classified as a hot lead.',
-      actor: 'EventPilot AI',
+      action: 'lead_classified',
+      detail: 'A sponsorship enquiry was classified as a priority lead with medium confidence.',
+      actor: 'AI EventOps Assistant',
       riskLevel: 'Medium',
       createdAt: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
     },
     {
       id: '3',
-      action: 'content_generated',
-      detail: 'Facebook post and reel script generated for Punjabi Live Concert.',
-      actor: 'Ravi Gupta',
+      action: 'content_draft_created',
+      detail: 'Social post and reel script drafts were generated for a sample event campaign.',
+      actor: 'Demo Workspace',
       riskLevel: 'Low',
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     },
@@ -61,36 +61,50 @@ const stats = {
 
 export default function DashboardHome() {
   const quickActions = [
-    { label: 'Create event', href: '/dashboard/events/new', icon: Plus },
-    { label: 'Review approvals', href: '/dashboard/approvals', icon: ShieldCheck },
-    { label: 'Generate content', href: '/dashboard/ai-content', icon: Sparkles },
+    { label: 'Create sample event', href: '/dashboard/events/new', icon: Plus },
+    { label: 'Review AI approvals', href: '/dashboard/approvals', icon: ShieldCheck },
+    { label: 'Generate content draft', href: '/dashboard/ai-content', icon: Sparkles },
     { label: 'Open AI inbox', href: '/dashboard/inbox', icon: MessagesSquare },
   ]
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="Welcome back — here is your EventPilot AI workspace overview.">
+      <PageHeader title="AI EventOps Dashboard" subtitle="Portfolio demo workspace showing governed AI workflows for event operations.">
         <Link href="/dashboard/events/new">
           <Button className="bg-cyan-500 hover:bg-cyan-600">
-            <Plus className="mr-1.5 h-4 w-4" /> New event
+            <Plus className="mr-1.5 h-4 w-4" /> New sample event
           </Button>
         </Link>
       </PageHeader>
 
+      <div className="mb-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-sm text-slate-700">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
+          <div>
+            <p className="font-semibold text-slate-900">Independent portfolio demo</p>
+            <p className="mt-1">
+              This workspace uses sample data to demonstrate AI-drafted responses, confidence scoring,
+              risk assessment, human approval, and auditability. No employer data or production customer
+              data is used here.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard icon={CalendarDays} label="Total events" value={stats.totalEvents} hint={`${stats.publishedEvents} published`} accent="cyan" />
-        <StatCard icon={ShieldCheck} label="Pending approvals" value={stats.pendingApprovals} hint="Awaiting review" accent="amber" />
+        <StatCard icon={CalendarDays} label="Sample events" value={stats.totalEvents} hint={`${stats.publishedEvents} published`} accent="cyan" />
+        <StatCard icon={ShieldCheck} label="Pending reviews" value={stats.pendingApprovals} hint="Human approval required" accent="amber" />
         <StatCard icon={MessagesSquare} label="New enquiries" value={stats.newEnquiries} hint="AI drafts ready" accent="violet" />
-        <StatCard icon={Flame} label="Hot leads" value={stats.hotLeads} hint={`${stats.totalLeads} total leads`} accent="rose" />
-        <StatCard icon={Sparkles} label="Content generated" value={stats.contentGenerated} hint="AI assets" accent="emerald" />
-        <StatCard icon={Bot} label="AI safety" value="OK" hint={`${stats.aiSafety.highRiskQueued} high-risk queued`} accent="emerald" />
+        <StatCard icon={Flame} label="Priority leads" value={stats.hotLeads} hint={`${stats.totalLeads} total leads`} accent="rose" />
+        <StatCard icon={Sparkles} label="Content drafts" value={stats.contentGenerated} hint="Generated for review" accent="emerald" />
+        <StatCard icon={Bot} label="AI governance" value="OK" hint={`${stats.aiGovernance.highRiskQueued} high-risk queued`} accent="emerald" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-2xl border bg-card p-6">
           <div className="mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-cyan-500" />
-            <h2 className="font-display text-lg font-semibold">Recent activity</h2>
+            <h2 className="font-display text-lg font-semibold">Recent demo activity</h2>
           </div>
 
           <div className="space-y-1">
@@ -139,7 +153,7 @@ export default function DashboardHome() {
           <div className="rounded-2xl border bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
             <div className="flex items-center gap-2 text-cyan-400">
               <ShieldCheck className="h-5 w-5" />
-              <h2 className="font-display text-lg font-semibold text-white">AI Safety status</h2>
+              <h2 className="font-display text-lg font-semibold text-white">AI governance status</h2>
             </div>
 
             <div className="mt-4 space-y-3 text-sm">
@@ -154,7 +168,7 @@ export default function DashboardHome() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-slate-300">High-risk queued</span>
+                <span className="text-slate-300">High-risk items</span>
                 <RiskBadge level="High" />
               </div>
             </div>

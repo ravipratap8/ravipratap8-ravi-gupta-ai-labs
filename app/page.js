@@ -8,15 +8,81 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  PROFILE, ABOUT, STATS, SKILLS, CERTIFICATIONS, PROJECTS, HERO_BG,
+  PROFILE, STATS, SKILLS, CERTIFICATIONS, PROJECTS, HERO_BG,
 } from '@/lib/brand'
 import {
   ArrowRight, Sparkles, ShieldCheck, MapPin, BadgeCheck, Cloud, Users,
   MessagesSquare, Bot, GanttChartSquare, Cpu, Mail, Linkedin,
-  Download, ChevronRight, Menu, X, CheckCircle2, Star,
+  ChevronRight, Menu, X, CheckCircle2, Star,
 } from 'lucide-react'
 
 const ICONS = { BadgeCheck, Cloud, Users }
+
+const HERO_COPY = {
+  badge: 'Independent AI Engineering Portfolio',
+  tagline: 'Quality Engineering Leader • AI Workflow Builder • Test Governance Specialist',
+  intro:
+    'I design and build AI-enabled business workflow demos, modern test automation frameworks, and quality engineering solutions with governance, auditability, and human review at the core.',
+  note:
+    'Built independently as a personal engineering portfolio using my own time, tools, and accounts.',
+}
+
+const ABOUT_COPY = [
+  '19+ years in quality engineering, enterprise delivery governance, automation, and digital transformation across retail, supply chain, and enterprise platforms.',
+  'My work sits at the intersection of delivery leadership, hands-on engineering, and responsible AI. This portfolio demonstrates how AI can improve real business workflows when supported by test strategy, risk controls, human approval, and auditability.',
+  'The applications shown here are independently built and are not affiliated with any current or previous employer.',
+]
+
+const SAFE_PROJECTS = [
+  {
+    title: 'AI EventOps Assistant',
+    category: 'Featured AI Workflow Demo',
+    description:
+      'A SaaS-style portfolio application for event organisers, showing AI-drafted customer replies, human approval, lead capture, content generation, confidence scoring, risk assessment, and audit logging.',
+    tags: ['Next.js', 'AI', 'Human-in-the-loop', 'MCP-ready'],
+    href: '/dashboard',
+    featured: true,
+    image:
+      PROJECTS?.[0]?.image ||
+      'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
+  },
+  {
+    title: 'Enterprise Test Automation Framework',
+    category: 'Quality Engineering',
+    description:
+      'A scalable automation framework concept using Playwright, API testing, CI/CD integration, parallel execution, and reporting to improve regression visibility and release confidence.',
+    tags: ['Playwright', 'API Testing', 'CI/CD'],
+    href: '#',
+    featured: false,
+    image:
+      PROJECTS?.[1]?.image ||
+      'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
+  },
+  {
+    title: 'CI/CD Quality Dashboard',
+    category: 'Delivery Governance',
+    description:
+      'A delivery assurance dashboard concept that surfaces test coverage, automation health, flaky tests, and release readiness signals for engineering and delivery stakeholders.',
+    tags: ['Quality Metrics', 'Dashboards', 'Governance'],
+    href: '#',
+    featured: false,
+    image:
+      PROJECTS?.[2]?.image ||
+      'https://images.pexels.com/photos/590020/pexels-photo-590020.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
+  },
+  {
+    title: 'Enterprise Supply Chain Quality Programme',
+    category: 'Enterprise Delivery',
+    description:
+      'Quality leadership across complex platform, integration, and automation programmes, including risk-based strategy, release governance, stakeholder assurance, and test planning.',
+    tags: ['Enterprise Platforms', 'Integration Testing', 'Test Leadership'],
+    href: '#',
+    featured: false,
+    image:
+      PROJECTS?.[3]?.image ||
+      'https://images.pexels.com/photos/4483610/pexels-photo-4483610.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940',
+  },
+]
 
 function Nav() {
   const [open, setOpen] = useState(false)
@@ -71,24 +137,23 @@ function Hero() {
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 md:grid-cols-2">
         <div className="animate-fade-up">
           <Badge className="mb-5 gap-1.5 border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/10">
-            <MapPin className="h-3.5 w-3.5" /> {PROFILE.location} • {PROFILE.status}
+            <ShieldCheck className="h-3.5 w-3.5" /> {HERO_COPY.badge}
           </Badge>
           <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white md:text-7xl">
             Ravi Gupta
           </h1>
           <p className="mt-4 bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300 bg-clip-text text-lg font-semibold text-transparent md:text-2xl">
-            {PROFILE.tagline}
+            {HERO_COPY.tagline}
           </p>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 md:text-lg">
-            {PROFILE.intro}
+            {HERO_COPY.intro}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/dashboard"><Button size="lg" className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"><Sparkles className="mr-2 h-4 w-4" /> View AI EventOps Demo</Button></Link>
             <a href="#contact"><Button size="lg" variant="outline" className="border-slate-700 bg-white/5 text-white hover:bg-white/10"><Mail className="mr-2 h-4 w-4" /> Contact Ravi</Button></a>
-            <a href="#resume"><Button size="lg" variant="ghost" className="text-slate-300 hover:text-white"><Download className="mr-2 h-4 w-4" /> View Resume</Button></a>
           </div>
           <div className="mt-8 flex items-center gap-2 text-sm text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-cyan-400" /> Currently {PROFILE.currentRole}
+            <ShieldCheck className="h-4 w-4 text-cyan-400" /> {HERO_COPY.note}
           </div>
         </div>
 
@@ -96,7 +161,6 @@ function Hero() {
           <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-cyan-500/30 to-violet-500/20 blur-3xl" />
           <div className="relative">
             <div className="mx-auto h-72 w-72 overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-cyan-500/10 md:h-96 md:w-80">
-              {/* Replace with Ravi's profile photo */}
               <img src={PROFILE.photo} alt="Ravi Gupta" className="h-full w-full object-cover" />
             </div>
             <div className="absolute -left-6 top-10 animate-float rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur md:-left-12">
@@ -108,7 +172,7 @@ function Hero() {
             <div className="absolute -right-4 bottom-10 animate-float rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur md:-right-10" style={{ animationDelay: '1.5s' }}>
               <div className="flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-400/15 text-violet-300"><Bot className="h-4 w-4" /></span>
-                <div><p className="text-xs font-semibold text-white">AI Builder</p><p className="text-[10px] text-slate-400">Human-in-loop</p></div>
+                <div><p className="text-xs font-semibold text-white">AI Builder</p><p className="text-[10px] text-slate-400">Human-in-the-loop</p></div>
               </div>
             </div>
           </div>
@@ -144,7 +208,7 @@ function About() {
           <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">About</p>
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">Delivery leadership meets hands-on engineering</h2>
           <div className="mt-6 space-y-4 text-slate-300">
-            {ABOUT.map((p, i) => (<p key={i} className="leading-relaxed">{p}</p>))}
+            {ABOUT_COPY.map((p, i) => (<p key={i} className="leading-relaxed">{p}</p>))}
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {['SAP WMS/TMS/EWM', 'Playwright', 'CI/CD', 'AI Governance', 'Selenium', 'Rest Assured', 'TOSCA'].map((t) => (
@@ -184,7 +248,7 @@ function Skills() {
 
 function EventOps() {
   const features = [
-    { icon: MessagesSquare, title: 'AI Customer Enquiry Assistant', desc: 'WhatsApp-style inbox with grounded AI draft replies and confidence scoring.' },
+    { icon: MessagesSquare, title: 'AI Customer Enquiry Assistant', desc: 'Messaging-style inbox with grounded AI draft replies and confidence scoring.' },
     { icon: ShieldCheck, title: 'Human-in-the-loop Approvals', desc: 'AI never auto-sends. Every reply is reviewed, with risk levels and audit logs.' },
     { icon: Sparkles, title: 'AI Content Generator', desc: 'Generate social posts, reel scripts, emails and FAQ pages per event.' },
     { icon: GanttChartSquare, title: 'Smart Lead Capture (CRM)', desc: 'Auto-classify enquiries into a sales pipeline: hot leads, sponsors, vendors.' },
@@ -195,7 +259,9 @@ function EventOps() {
         <div className="mb-12 max-w-3xl">
           <Badge className="mb-4 gap-1.5 border-violet-400/30 bg-violet-400/10 text-violet-300 hover:bg-violet-400/10"><Cpu className="h-3.5 w-3.5" /> Featured AI Application</Badge>
           <h2 className="font-display text-3xl font-bold text-white md:text-5xl">AI EventOps Assistant</h2>
-          <p className="mt-4 text-lg text-slate-300">A production-style SaaS for event organisers — AI-drafted customer replies, human-in-the-loop approvals, lead capture and content generation, built with the test governance of an AI Test Manager.</p>
+          <p className="mt-4 text-lg text-slate-300">
+            A SaaS-style AI workflow demo for event operations, showing AI-drafted customer replies, human approval, lead capture, content generation, confidence scoring, risk assessment, and audit logging.
+          </p>
         </div>
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -212,7 +278,7 @@ function EventOps() {
               <img src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="AI EventOps Assistant" className="h-full w-full object-cover" />
             </div>
             <div className="mt-6">
-              <Link href="/dashboard"><Button size="lg" className="w-full bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:opacity-90"><Sparkles className="mr-2 h-4 w-4" /> Launch the live demo — no signup needed <ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
+              <Link href="/dashboard"><Button size="lg" className="w-full bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:opacity-90"><Sparkles className="mr-2 h-4 w-4" /> Open the AI workflow demo <ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
             </div>
           </div>
         </div>
@@ -230,7 +296,7 @@ function Projects() {
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">Selected projects</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
-          {PROJECTS.map((p) => (
+          {SAFE_PROJECTS.map((p) => (
             <div key={p.title} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] transition hover:border-cyan-400/30">
               <div className="relative h-52 overflow-hidden">
                 <img src={p.image} alt={p.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
@@ -244,7 +310,7 @@ function Projects() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {p.tags.map((t) => (<Badge key={t} variant="outline" className="border-slate-700 bg-transparent text-slate-300">{t}</Badge>))}
                 </div>
-                {p.href.startsWith('/') && (
+                {p.href?.startsWith('/') && (
                   <Link href={p.href} className="mt-5 inline-flex items-center text-sm font-medium text-cyan-400 hover:text-cyan-300">Open demo <ChevronRight className="h-4 w-4" /></Link>
                 )}
               </div>
@@ -288,7 +354,7 @@ function Contact() {
     const form = e.currentTarget
     setTimeout(() => {
       setSending(false)
-      toast.success('Thanks! Your message has been received.', { description: 'Ravi will get back to you shortly. (Demo — Resend email wiring is a placeholder.)' })
+      toast.success('Thanks! Your message has been received.', { description: 'Ravi will get back to you shortly. Demo email wiring can be connected later.' })
       form.reset()
     }, 800)
   }
@@ -297,8 +363,10 @@ function Contact() {
       <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-2">
         <div>
           <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">Get in touch</p>
-          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">Let's build something with quality at its core</h2>
-          <p className="mt-4 text-slate-300">Open to senior technology leadership, test management, and AI solution roles across New Zealand and Australia.</p>
+          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">Let's build AI workflows with quality at the core</h2>
+          <p className="mt-4 text-slate-300">
+            This portfolio is focused on enterprise AI engineering, quality governance, human-in-the-loop workflows, and practical automation.
+          </p>
           <div className="mt-8 space-y-4">
             <a href={`mailto:${PROFILE.email}`} className="flex items-center gap-3 text-slate-300 hover:text-cyan-400"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5"><Mail className="h-5 w-5" /></span>{PROFILE.email}</a>
             <a href={PROFILE.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-300 hover:text-cyan-400"><span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5"><Linkedin className="h-5 w-5" /></span>LinkedIn profile</a>
@@ -321,7 +389,7 @@ function Contact() {
 
 function Footer() {
   return (
-    <footer id="resume" className="border-t border-white/5 py-12">
+    <footer className="border-t border-white/5 py-12">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 md:flex-row">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-xs font-bold text-slate-950">RG</span>
