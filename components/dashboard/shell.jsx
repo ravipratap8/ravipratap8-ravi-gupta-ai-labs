@@ -1,11 +1,11 @@
-
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/nav';
 import { EventOps } from '@/lib/api-client';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   Bell,
   ArrowUpRight,
   Cpu,
+  LogOut,
 } from 'lucide-react';
 
 const ICONS = {
@@ -38,7 +39,7 @@ const ICONS = {
 };
 
 function getInitials(nameOrEmail) {
-  if (!nameOrEmail) return 'RG';
+  if (!nameOrEmail) return 'US';
 
   const cleanValue = nameOrEmail.trim();
 
@@ -154,12 +155,18 @@ function SidebarInner({ counts, onNavigate }) {
 }
 
 export default function DashboardShell({ children, profile, workspace }) {
+  const router = useRouter();
   const [counts, setCounts] = useState({});
   const [open, setOpen] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+
+  const displayEmail = useMemo(() => {
+    return authEmail || profile?.email || '';
+  }, [authEmail, profile]);
 
   const displayName = useMemo(() => {
-    return profile?.full_name || profile?.email || 'User';
-  }, [profile]);
+    return displayEmail || profile?.full_name || 'User';
+  }, [displayEmail, profile]);
 
   const displayRole = useMemo(() => {
     return formatRole(profile?.role);
@@ -167,6 +174,14 @@ export default function DashboardShell({ children, profile, workspace }) {
 
   const workspaceName = workspace?.name || 'Workspace';
   const initials = getInitials(displayName);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setAuthEmail(data?.user?.email || '');
+    });
+  }, []);
 
   useEffect(() => {
     EventOps.stats()
@@ -183,6 +198,13 @@ export default function DashboardShell({ children, profile, workspace }) {
         });
       });
   }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/login');
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,12 +252,17 @@ export default function DashboardShell({ children, profile, workspace }) {
             </div>
 
             <div className="hidden text-left leading-tight sm:block">
-              <p className="max-w-36 truncate text-xs font-semibold text-foreground">
-                {displayName}
+              <p className="max-w-52 truncate text-xs font-semibold text-foreground">
+                {displayEmail || displayName}
               </p>
               <p className="text-[10px] text-muted-foreground">{displayRole}</p>
             </div>
           </div>
+
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="mr-1.5 h-4 w-4" />
+            Logout
+          </Button>
         </header>
 
         <main className="p-4 md:p-8">{children}</main>

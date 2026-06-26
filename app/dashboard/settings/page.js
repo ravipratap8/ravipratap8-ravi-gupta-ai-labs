@@ -56,7 +56,7 @@ export default function SettingsPage() {
             <div className="mb-4 flex items-center gap-2"><User className="h-5 w-5 text-cyan-500" /><h3 className="font-display font-semibold">Profile</h3></div>
             <div className="grid gap-3">
               <div className="space-y-1.5"><Label>Display name</Label><Input defaultValue="Ravi Gupta" /></div>
-              <div className="space-y-1.5"><Label>Email</Label><Input defaultValue="ravi@ravigupta.dev" /></div>
+              <div className="space-y-1.5"><Label>Email</Label><Input defaultValue="hello2ravigupta@gmail.com" /></div>
               <div className="space-y-1.5"><Label>Organisation</Label><Input defaultValue="Ravi Events Co." /></div>
               <Button className="mt-2 w-fit bg-cyan-500 hover:bg-cyan-600">Save profile</Button>
             </div>
