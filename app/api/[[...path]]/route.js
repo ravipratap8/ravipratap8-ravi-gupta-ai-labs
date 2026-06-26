@@ -983,7 +983,7 @@ export async function POST(request, context) {
       return ok({ ...generated, saved: mapContent(data) });
     }
 
-    if (path[0] === 'approvals' && path[2] === 'approve') {
+        if (path[0] === 'approvals' && path[2] === 'approve') {
       const { data, error } = await ctx.supabase
         .from('ai_approvals')
         .update({
@@ -997,7 +997,57 @@ export async function POST(request, context) {
         .single();
 
       if (error) throw error;
-      await writeAudit(ctx, 'ai.reply.approved', 'ai_approval', data.id, { risk_level: data.risk_level });
+
+      if (data?.message_id) {
+        await ctx.supabase
+          .from('messages')
+          .update({
+            status: 'approved',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('workspace_id', workspaceId)
+          .eq('id', data.message_id);
+      }
+
+      await writeAudit(ctx, 'ai.reply.approved', 'ai_approval', data.id, {
+        risk_level: data.risk_level,
+        message_id: data.message_id,
+      });
+
+      return ok(mapApproval(data));
+    }
+
+    if (path[0] === 'approvals' && path[2] === 'reject') {
+      const { data, error } = await ctx.supabase
+        .from('ai_approvals')
+        .update({
+          status: 'rejected',
+          reviewed_by: ctx.user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('workspace_id', workspaceId)
+        .eq('id', path[1])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data?.message_id) {
+        await ctx.supabase
+          .from('messages')
+          .update({
+            status: 'rejected',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('workspace_id', workspaceId)
+          .eq('id', data.message_id);
+      }
+
+      await writeAudit(ctx, 'ai.reply.rejected', 'ai_approval', data.id, {
+        risk_level: data.risk_level,
+        message_id: data.message_id,
+      });
+
       return ok(mapApproval(data));
     }
 
