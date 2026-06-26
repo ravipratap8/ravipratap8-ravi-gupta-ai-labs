@@ -3,22 +3,84 @@
 import { useEffect, useState } from 'react'
 import { EventOps } from '@/lib/api-client'
 import { consumeVoiceAction } from '@/lib/voice/voiceActions'
-import { PageHeader, StatusBadge, RiskBadge, CategoryBadge, Confidence, Loading, EmptyState } from '@/components/dashboard/ui'
+import {
+  PageHeader,
+  StatusBadge,
+  RiskBadge,
+  CategoryBadge,
+  Confidence,
+  Loading,
+  EmptyState,
+} from '@/components/dashboard/ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { Bot, Check, Pencil, MessageSquarePlus, Sparkles, ShieldAlert, MessagesSquare } from 'lucide-react'
+import {
+  Bot,
+  Check,
+  Pencil,
+  MessageSquarePlus,
+  Sparkles,
+  ShieldAlert,
+  MessagesSquare,
+} from 'lucide-react'
 
 function Avatar({ name }) {
-  const initials = (name || '?').split(' ').map((part) => part[0]).slice(0, 2).join('')
+  const initials = (name || '?')
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+
   return (
     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-sky-600 text-sm font-bold text-white">
       {initials}
     </span>
   )
+}
+
+function normaliseStatus(status) {
+  return String(status || 'drafted').toLowerCase()
+}
+
+function normaliseMessage(message) {
+  const messageText =
+    message.customerMessage ||
+    message.customer_message ||
+    message.messageText ||
+    message.message ||
+    'No incoming message captured'
+
+  const aiDraft =
+    message.aiDraft ||
+    message.ai_draft ||
+    message.aiSuggestedReply ||
+    message.aiOutput ||
+    message.ai_output ||
+    'No AI draft captured'
+
+  return {
+    ...message,
+    customerName: message.customerName || message.customer_name || 'Customer',
+    eventId: message.eventId || message.event_id || null,
+    eventName:
+      message.eventName ||
+      message.event?.title ||
+      message.event?.name ||
+      message.events?.title ||
+      message.events?.name ||
+      'No sample event linked',
+    messageText,
+    aiDraft,
+    aiSuggestedReply: aiDraft,
+    riskLevel: message.riskLevel || message.risk_level || 'medium',
+    category: message.category || 'General',
+    confidence: message.confidence ?? 0,
+    status: message.status || 'drafted',
+  }
 }
 
 export default function InboxPage() {
@@ -27,12 +89,33 @@ export default function InboxPage() {
   const [activeId, setActiveId] = useState(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
-  const [composer, setComposer] = useState({ open: false, text: '', eventId: '', name: '' })
+  const [busy, setBusy] = useState(false)
+  const [composer, setComposer] = useState({
+    open: false,
+    text: '',
+    eventId: '',
+    name: '',
+  })
 
-  const load = async () => {
+  const load = async (preferredId = null) => {
     const loadedMessages = await EventOps.messages().catch(() => [])
-    setMessages(loadedMessages)
-    if (!activeId && loadedMessages.length) setActiveId(loadedMessages[0].id)
+    const normalised = (loadedMessages || []).map(normaliseMessage)
+
+    setMessages(normalised)
+
+    if (preferredId && normalised.some((message) => message.id === preferredId)) {
+      setActiveId(preferredId)
+      return
+    }
+
+    if (!activeId && normalised.length) {
+      setActiveId(normalised[0].id)
+      return
+    }
+
+    if (activeId && !normalised.some((message) => message.id === activeId)) {
+      setActiveId(normalised[0]?.id || null)
+    }
   }
 
   useEffect(() => {
@@ -41,7 +124,6 @@ export default function InboxPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Voice Copilot: open the sample enquiry composer when arriving via "simulate enquiry".
   useEffect(() => {
     const action = consumeVoiceAction()
     if (action && action.actionType === 'enquiry') {
@@ -53,63 +135,158 @@ export default function InboxPage() {
 
   useEffect(() => {
     if (active) {
-      setDraft(active.aiSuggestedReply)
+      setDraft(active.aiDraft || active.aiSuggestedReply || '')
       setEditing(false)
     }
   }, [active])
 
   const updateLocal = (id, patch) => {
-    setMessages((currentMessages) => (currentMessages || []).map((message) => (
-      message.id === id ? { ...message, ...patch } : message
-    )))
+    setMessages((currentMessages) =>
+      (currentMessages || []).map((message) =>
+        message.id === id ? normaliseMessage({ ...message, ...patch }) : message
+      )
+    )
+  }
+
+  const findApprovalForMessage = async (messageId) => {
+    const approvals = await EventOps.approvals().catch(() => [])
+
+    return (approvals || []).find((approval) => {
+      const status = normaliseStatus(approval.status)
+      const linkedMessageId =
+        approval.message_id ||
+        approval.messageId ||
+        approval.linkedMessage?.id ||
+        approval.messageObject?.id
+
+      return status === 'pending' && linkedMessageId === messageId
+    })
   }
 
   const approve = async () => {
-    await EventOps.approve(active.id, editing ? { editedReply: draft } : {})
-    updateLocal(active.id, { status: 'Approved', aiSuggestedReply: draft })
-    setEditing(false)
-    toast.success('Draft approved', {
-      description: 'The AI draft is approved for human-controlled follow-up.',
-    })
+    if (!active || busy) return
+
+    try {
+      setBusy(true)
+
+      const approval = await findApprovalForMessage(active.id)
+
+      if (approval?.id) {
+        await EventOps.approve(
+          approval.id,
+          editing
+            ? {
+                editedReply: draft,
+                aiDraft: draft,
+                aiOutput: draft,
+              }
+            : {}
+        )
+      }
+
+      await EventOps.updateMessage(active.id, {
+        status: 'approved',
+        aiDraft: draft,
+        ai_draft: draft,
+      }).catch(() => {})
+
+      updateLocal(active.id, {
+        status: 'approved',
+        aiDraft: draft,
+        aiSuggestedReply: draft,
+      })
+
+      setEditing(false)
+
+      toast.success('Draft approved', {
+        description: 'The AI draft is approved for human-controlled follow-up.',
+      })
+    } catch (error) {
+      toast.error('Approval failed', {
+        description: error?.message || 'Unable to approve this draft.',
+      })
+    } finally {
+      setBusy(false)
+    }
   }
 
   const markHandled = async () => {
-    await EventOps.updateMessage(active.id, { status: 'Sent' })
-    updateLocal(active.id, { status: 'Sent' })
-    toast.success('Marked as handled', {
-      description: 'External message sending is not connected in this portfolio demo.',
-    })
+    if (!active || busy) return
+
+    try {
+      setBusy(true)
+
+      await EventOps.updateMessage(active.id, { status: 'sent' })
+      updateLocal(active.id, { status: 'sent' })
+
+      toast.success('Marked as handled', {
+        description: 'External message sending is not connected in this portfolio demo.',
+      })
+    } catch (error) {
+      toast.error('Update failed', {
+        description: error?.message || 'Unable to mark this enquiry as handled.',
+      })
+    } finally {
+      setBusy(false)
+    }
   }
 
   const regenerate = async () => {
-    const result = await EventOps.generateReply(active.message, active.eventId)
-    setDraft(result.reply)
-    setEditing(true)
-    toast.success('AI generated a new draft for review')
+    if (!active || busy) return
+
+    try {
+      setBusy(true)
+
+      const result = await EventOps.generateReply(active.messageText, active.eventId)
+
+      if (result?.message?.id) {
+        await load(result.message.id)
+      } else {
+        setDraft(result.reply || result.draft || '')
+        setEditing(true)
+      }
+
+      toast.success('AI generated a new draft for review')
+    } catch (error) {
+      toast.error('Regenerate failed', {
+        description: error?.message || 'Unable to regenerate AI draft.',
+      })
+    } finally {
+      setBusy(false)
+    }
   }
 
   const sendComposer = async () => {
-    if (!composer.text) return
+    if (!composer.text.trim()) {
+      toast.error('Enter a sample enquiry first')
+      return
+    }
 
-    const message = await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: composer.text,
-        eventId: composer.eventId,
-        customerName: composer.name || 'Sample Contact',
-      }),
-    }).then((response) => response.json())
+    try {
+      setBusy(true)
 
-    setComposer({ open: false, text: '', eventId: '', name: '' })
-    await load()
-    setActiveId(message.id)
-    toast.success('Sample enquiry created', {
-      description: 'AI drafted a response for human review.',
-    })
+      const result = await EventOps.generateReply(composer.text, composer.eventId || null)
+      const newMessageId = result?.message?.id
+
+      setComposer({ open: false, text: '', eventId: '', name: '' })
+
+      await load(newMessageId)
+
+      toast.success('Sample enquiry created', {
+        description: 'AI drafted a response for human review.',
+      })
+    } catch (error) {
+      toast.error('Sample enquiry failed', {
+        description: error?.message || 'Unable to create sample enquiry.',
+      })
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (!messages) return <Loading label="Loading AI inbox..." />
+
+  const activeStatus = normaliseStatus(active?.status)
 
   return (
     <div>
@@ -117,7 +294,10 @@ export default function InboxPage() {
         title="AI Enquiry Inbox"
         subtitle="Messaging-style sample enquiries with grounded AI draft replies. Nothing is sent automatically."
       >
-        <Button onClick={() => setComposer((current) => ({ ...current, open: !current.open }))} variant="outline">
+        <Button
+          onClick={() => setComposer((current) => ({ ...current, open: !current.open }))}
+          variant="outline"
+        >
           <MessageSquarePlus className="mr-1.5 h-4 w-4" /> Add sample enquiry
         </Button>
       </PageHeader>
@@ -138,29 +318,45 @@ export default function InboxPage() {
             <Input
               placeholder="Sample contact name"
               value={composer.name}
-              onChange={(event) => setComposer((current) => ({ ...current, name: event.target.value }))}
+              onChange={(event) =>
+                setComposer((current) => ({ ...current, name: event.target.value }))
+              }
             />
+
             <Select
               value={composer.eventId}
-              onValueChange={(value) => setComposer((current) => ({ ...current, eventId: value }))}
+              onValueChange={(value) =>
+                setComposer((current) => ({ ...current, eventId: value }))
+              }
             >
-              <SelectTrigger><SelectValue placeholder="Link to sample event" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Link to sample event" />
+              </SelectTrigger>
               <SelectContent>
                 {events.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.name || event.title}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
             <Input
-              placeholder="e.g. Is parking available?"
+              placeholder="e.g. Can I get a refund if I cannot attend?"
               value={composer.text}
-              onChange={(event) => setComposer((current) => ({ ...current, text: event.target.value }))}
-              onKeyDown={(event) => event.key === 'Enter' && sendComposer()}
+              onChange={(event) =>
+                setComposer((current) => ({ ...current, text: event.target.value }))
+              }
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') sendComposer()
+              }}
             />
           </div>
+
           <div className="mt-3 flex justify-end">
-            <Button onClick={sendComposer} className="bg-cyan-500 hover:bg-cyan-600">
-              <Sparkles className="mr-1.5 h-4 w-4" /> Generate AI draft
+            <Button onClick={sendComposer} disabled={busy} className="bg-cyan-500 hover:bg-cyan-600">
+              <Sparkles className="mr-1.5 h-4 w-4" />
+              {busy ? 'Generating...' : 'Generate AI draft'}
             </Button>
           </div>
         </div>
@@ -171,6 +367,7 @@ export default function InboxPage() {
           <div className="border-b p-3 text-sm font-medium text-muted-foreground">
             {messages.length} sample conversation{messages.length === 1 ? '' : 's'}
           </div>
+
           <div className="max-h-[600px] divide-y overflow-y-auto scrollbar-thin">
             {messages.map((message) => (
               <button
@@ -178,16 +375,23 @@ export default function InboxPage() {
                 onClick={() => setActiveId(message.id)}
                 className={cn(
                   'flex w-full items-start gap-3 p-3 text-left transition hover:bg-slate-50',
-                  activeId === message.id && 'bg-cyan-50/60',
+                  activeId === message.id && 'bg-cyan-50/60'
                 )}
               >
                 <Avatar name={message.customerName} />
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-foreground">{message.customerName}</p>
-                    {message.riskLevel === 'High' && <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />}
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {message.customerName}
+                    </p>
+                    {String(message.riskLevel).toLowerCase() === 'high' && (
+                      <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
+                    )}
                   </div>
-                  <p className="truncate text-sm text-muted-foreground">{message.message}</p>
+
+                  <p className="truncate text-sm text-muted-foreground">{message.messageText}</p>
+
                   <div className="mt-1 flex items-center gap-1.5">
                     <StatusBadge status={message.status} />
                   </div>
@@ -205,17 +409,18 @@ export default function InboxPage() {
                 <div>
                   <p className="font-semibold text-foreground">{active.customerName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {active.eventName || 'No sample event linked'} • sample messaging channel
+                    {active.eventName} • sample messaging channel
                   </p>
                 </div>
               </div>
+
               <CategoryBadge category={active.category} />
             </div>
 
             <div className="flex-1 space-y-4 bg-muted p-5" style={{ minHeight: 280 }}>
               <div className="flex justify-start">
                 <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-card px-4 py-2.5 text-sm text-foreground shadow-sm">
-                  {active.message}
+                  {active.messageText}
                 </div>
               </div>
 
@@ -224,11 +429,18 @@ export default function InboxPage() {
                   <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-cyan-700">
                     <Bot className="h-3.5 w-3.5" /> AI-drafted response
                   </div>
+
                   {editing ? (
-                    <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={5} className="bg-card text-sm" />
+                    <Textarea
+                      value={draft}
+                      onChange={(event) => setDraft(event.target.value)}
+                      rows={5}
+                      className="bg-card text-sm"
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap text-sm text-foreground">{draft}</p>
                   )}
+
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <Confidence value={active.confidence} />
                     <RiskBadge level={active.riskLevel} />
@@ -239,28 +451,53 @@ export default function InboxPage() {
 
             <div className="flex flex-wrap items-center gap-2 border-t p-4">
               <StatusBadge status={active.status} />
+
               <div className="ml-auto flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={regenerate}>
+                <Button variant="outline" size="sm" disabled={busy} onClick={regenerate}>
                   <Sparkles className="mr-1.5 h-4 w-4" /> Regenerate
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setEditing((value) => !value)}>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => setEditing((value) => !value)}
+                >
                   <Pencil className="mr-1.5 h-4 w-4" /> {editing ? 'Editing...' : 'Edit'}
                 </Button>
-                {active.status !== 'Approved' && active.status !== 'Sent' && (
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={approve}>
-                    <Check className="mr-1.5 h-4 w-4" /> Approve draft
+
+                {activeStatus !== 'approved' && activeStatus !== 'sent' && (
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={approve}
+                  >
+                    <Check className="mr-1.5 h-4 w-4" />
+                    {busy ? 'Approving...' : 'Approve draft'}
                   </Button>
                 )}
-                {active.status === 'Approved' && (
-                  <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600" onClick={markHandled}>
-                    <Check className="mr-1.5 h-4 w-4" /> Mark handled
+
+                {activeStatus === 'approved' && (
+                  <Button
+                    size="sm"
+                    disabled={busy}
+                    className="bg-cyan-500 hover:bg-cyan-600"
+                    onClick={markHandled}
+                  >
+                    <Check className="mr-1.5 h-4 w-4" />
+                    {busy ? 'Saving...' : 'Mark handled'}
                   </Button>
                 )}
               </div>
             </div>
           </div>
         ) : (
-          <EmptyState icon={MessagesSquare} title="No conversation selected" desc="Pick a sample conversation from the list." />
+          <EmptyState
+            icon={MessagesSquare}
+            title="No conversation selected"
+            desc="Pick a sample conversation from the list."
+          />
         )}
       </div>
     </div>
