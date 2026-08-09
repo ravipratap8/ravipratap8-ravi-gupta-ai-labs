@@ -167,7 +167,9 @@ export default function LoginPage() {
 
           <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
             <span className="h-px flex-1 bg-white/10" />
-            or {mode === 'signin' ? 'sign in' : 'sign up'}
+            <span>
+              or {mode === 'signin' ? 'sign in' : 'sign up'}
+            </span>
             <span className="h-px flex-1 bg-white/10" />
           </div>
 
@@ -183,6 +185,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                autoComplete="email"
                 className="border-slate-700 bg-slate-900/60 text-white"
               />
             </div>
@@ -219,6 +222,11 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Minimum 6 characters"
+                autoComplete={
+                  mode === 'signin'
+                    ? 'current-password'
+                    : 'new-password'
+                }
                 className="border-slate-700 bg-slate-900/60 text-white"
               />
             </div>
