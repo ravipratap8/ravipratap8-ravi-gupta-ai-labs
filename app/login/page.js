@@ -83,7 +83,8 @@ export default function LoginPage() {
     setResetLoading(true)
 
     try {
-      const redirectTo = `${window.location.origin}/reset-password`
+      const redirectTo =
+        `${window.location.origin}/auth/callback?next=${encodeURIComponent('/reset-password')}`
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
@@ -98,14 +99,15 @@ export default function LoginPage() {
 
       toast.success('Password reset email sent', {
         description:
-          'Open the latest email from Supabase and click the reset-password link.',
+          'Check your inbox and open the latest password reset email.',
       })
     } catch (error) {
       console.error('Password reset failed:', error)
 
       toast.error('Unable to send reset email', {
         description:
-          error?.message || 'Please check the email address and try again.',
+          error?.message ||
+          'Please check the email address and try again.',
       })
     } finally {
       setResetLoading(false)
