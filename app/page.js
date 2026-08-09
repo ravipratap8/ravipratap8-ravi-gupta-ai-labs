@@ -91,6 +91,7 @@ function Nav() {
     { label: 'Skills', href: '#skills' },
     { label: 'AI EventOps', href: '#eventops' },
     { label: 'Projects', href: '#projects' },
+    { label: 'Articles', href: '/articles' },
     { label: 'Contact', href: '#contact' },
   ]
   return (
@@ -105,7 +106,7 @@ function Nav() {
         </Link>
         <div className="hidden items-center gap-8 md:flex">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="text-sm text-slate-300 transition hover:text-cyan-400">{l.label}</a>
+            <Link key={l.href} href={l.href} className="text-sm text-slate-300 transition hover:text-cyan-400">{l.label}</Link>
           ))}
         </div>
         <div className="hidden items-center gap-3 md:flex">
@@ -117,7 +118,7 @@ function Nav() {
       {open && (
         <div className="border-t border-white/5 bg-slate-950 px-5 py-4 md:hidden">
           {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block py-2 text-slate-300">{l.label}</a>
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="block py-2 text-slate-300">{l.label}</Link>
           ))}
           <Link href="/dashboard"><Button className="mt-3 w-full bg-cyan-400 text-slate-950">Launch AI Demo</Button></Link>
         </div>

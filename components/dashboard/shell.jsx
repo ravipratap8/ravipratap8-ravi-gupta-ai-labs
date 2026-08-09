@@ -25,6 +25,7 @@ import {
   ArrowUpRight,
   Cpu,
   LogOut,
+  FileText,
 } from 'lucide-react';
 
 const DASHBOARD_STATS_REFRESH_EVENT = 'eventops:stats-refresh';
@@ -38,6 +39,7 @@ const ICONS = {
   Users,
   ScrollText,
   Settings,
+  FileText,
 };
 
 function getInitials(nameOrEmail) {
