@@ -1,22 +1,60 @@
-import Link from 'next/link';
-import { ArrowLeft, ArrowRight, FileDown, FileUp, ShieldCheck, Wrench } from 'lucide-react';
+import Link from 'next/link'
+import { ArrowLeft, ArrowRight, FlaskConical, ShieldCheck, Sparkles, Wrench } from 'lucide-react'
+import { QA_TOOLS, TOOL_GROUPS } from '@/lib/tools/catalog'
 
 export const metadata = {
-  title: 'Useful Tools | Ravi Gupta',
-  description: 'Simple, privacy-minded browser tools from Ravi Gupta AI Labs.',
-};
-
-const TOOLS = [
-  { title: 'Word to PDF', description: 'Convert a .docx file to PDF directly in your browser. Your document is processed locally on your device.', href: '/tools/word-to-pdf', icon: FileDown },
-  { title: 'PDF to Word', description: 'Extract text from a text-based PDF and download it as an editable Word document, processed locally in your browser.', href: '/tools/pdf-to-word', icon: FileUp },
-];
+  title: 'Useful QA Tools | Ravi Gupta',
+  description: 'Free practical QA and testing tools for test cases, test plans, risk analysis, traceability, test data, regression and release readiness.',
+}
 
 export default function ToolsPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-white/10"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5"><Link href="/" className="flex items-center gap-2.5"><span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-sm font-bold text-slate-950">RG</span><div className="leading-tight"><p className="font-display text-sm font-bold">Ravi Gupta</p><p className="text-[11px] text-cyan-400">AI Labs</p></div></Link><Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300"><ArrowLeft className="h-4 w-4" /> Back to portfolio</Link></div></header>
-      <section className="relative overflow-hidden border-b border-white/10"><div className="absolute inset-0 bg-grid opacity-30" /><div className="relative mx-auto max-w-7xl px-5 py-20 md:py-28"><div className="max-w-3xl"><div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-sm text-cyan-300"><Wrench className="h-4 w-4" /> Useful Tools</div><h1 className="font-display text-4xl font-bold tracking-tight md:text-6xl">Small tools that save real time.</h1><p className="mt-5 text-lg leading-relaxed text-slate-300">A growing collection of practical utilities. Wherever possible, files are processed locally in your browser rather than uploaded to a server.</p></div></div></section>
-      <section className="mx-auto max-w-7xl px-5 py-14 md:py-20"><div className="grid gap-6 md:grid-cols-2">{TOOLS.map(({ title, description, href, icon: Icon }) => <Link key={href} href={href} className="group rounded-3xl border border-white/10 bg-white/[0.035] p-7 transition hover:-translate-y-1 hover:border-cyan-400/30"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300"><Icon className="h-6 w-6" /></div><h2 className="mt-5 font-display text-2xl font-bold">{title}</h2><p className="mt-3 leading-relaxed text-slate-400">{description}</p><span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-400">Open tool <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>)}</div><div className="mt-8 flex items-center gap-2 text-sm text-slate-500"><ShieldCheck className="h-4 w-4" /> More tools can be added here without changing the portfolio structure.</div></section>
+      <header className="border-b border-white/10 bg-slate-950/90">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+          <Link href="/" className="flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-300"><ArrowLeft className="h-4 w-4" /> Back to portfolio</Link>
+          <div className="flex items-center gap-2 text-xs text-slate-500"><Wrench className="h-4 w-4" /> Useful Tools</div>
+        </div>
+      </header>
+
+      <section className="relative overflow-hidden border-b border-white/5 py-16 md:py-24">
+        <div className="absolute inset-0 bg-grid opacity-30" />
+        <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-5">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200"><FlaskConical className="h-3.5 w-3.5" /> Built for working QA professionals</div>
+            <h1 className="mt-5 font-display text-4xl font-bold tracking-tight md:text-6xl">Useful QA tools that produce real testing artefacts.</h1>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-300">Paste a requirement or upload a source document. Generate test cases, test plans, risk analysis, traceability, regression scope, release-readiness assessments and more. The goal is not another chatbot. It is faster QA work with human review still in control.</p>
+            <div className="mt-7 flex flex-wrap gap-3 text-xs text-slate-400"><span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">{QA_TOOLS.length} practical tools</span><span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">Document input</span><span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">Copy / export results</span><span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">AI + safe fallback</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 py-14 md:py-20">
+        {TOOL_GROUPS.map((group) => {
+          const tools = QA_TOOLS.filter((tool) => tool.group === group.id)
+          return (
+            <div key={group.id} className="mb-16 last:mb-0">
+              <div className="mb-7"><h2 className="font-display text-2xl font-bold md:text-3xl">{group.label}</h2><p className="mt-2 text-sm text-slate-400">{group.description}</p></div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {tools.map((tool) => (
+                  <Link key={tool.slug} href={`/tools/${tool.slug}`} className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+                    <div className="flex items-start justify-between gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-cyan-400/10 text-cyan-300"><tool.icon className="h-5 w-5" /></span>{tool.badge && <span className="rounded-full border border-violet-400/20 bg-violet-400/10 px-2.5 py-1 text-[10px] font-medium text-violet-200">{tool.badge}</span>}</div>
+                    <h3 className="mt-5 font-display text-lg font-semibold group-hover:text-cyan-200">{tool.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
+                    <div className="mt-5 flex items-center justify-between text-xs"><span className="text-slate-600">Open tool</span><ArrowRight className="h-4 w-4 text-cyan-400 transition group-hover:translate-x-1" /></div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/5 p-6"><ShieldCheck className="h-6 w-6 text-emerald-300" /><h3 className="mt-3 font-display text-lg font-semibold">Designed around QA governance</h3><p className="mt-2 text-sm leading-6 text-slate-400">The generators explicitly surface assumptions, missing evidence and unresolved questions instead of quietly pretending the requirement is complete.</p></div>
+          <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-6"><Sparkles className="h-6 w-6 text-cyan-300" /><h3 className="mt-3 font-display text-lg font-semibold">Reusable engine, not 17 isolated demos</h3><p className="mt-2 text-sm leading-6 text-slate-400">Each tool has its own purpose and URL but shares one hardened workflow, so more tools can be added later without duplicating the application.</p></div>
+        </div>
+      </section>
     </main>
-  );
+  )
 }
