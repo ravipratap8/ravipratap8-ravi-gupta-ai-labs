@@ -1,46 +1,38 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { FileText, Plus, Save, Send, Trash2, ExternalLink, Pencil, Bold, Italic, List, ListOrdered, Heading2, Quote, Link2 } from 'lucide-react';
+import { FileText, Plus, Save, Send, Trash2, ExternalLink, Pencil, ImagePlus, Search, Tags, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/dashboard/ui';
+import ArticleEditor from '@/components/articles/article-editor';
 
-const EMPTY = { id: null, title: '', slug: '', excerpt: '', contentHtml: '', featuredImageUrl: '', status: 'draft' };
-
-function clientCleanHtml(html = '') {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  doc.querySelectorAll('script,style,iframe,object,embed,form,input,button,svg,math').forEach((node) => node.remove());
-  const allowed = new Set(['P','BR','H2','H3','H4','STRONG','B','EM','I','U','S','UL','OL','LI','BLOCKQUOTE','A','PRE','CODE','HR']);
-  [...doc.body.querySelectorAll('*')].forEach((node) => {
-    if (!allowed.has(node.tagName)) {
-      node.replaceWith(...node.childNodes);
-      return;
-    }
-    [...node.attributes].forEach((attr) => {
-      if (node.tagName === 'A' && attr.name.toLowerCase() === 'href') return;
-      node.removeAttribute(attr.name);
-    });
-    if (node.tagName === 'A') {
-      const href = node.getAttribute('href') || '';
-      if (!/^(https?:\/\/|mailto:|\/|#)/i.test(href)) node.removeAttribute('href');
-      node.setAttribute('target', '_blank');
-      node.setAttribute('rel', 'noopener noreferrer');
-    }
-  });
-  return doc.body.innerHTML;
-}
+const EMPTY = {
+  id: null,
+  title: '',
+  slug: '',
+  excerpt: '',
+  contentHtml: '',
+  featuredImageUrl: '',
+  status: 'draft',
+  category: 'AI & Technology',
+  tags: '',
+  seoTitle: '',
+  seoDescription: '',
+  publishedAt: '',
+};
 
 export default function ArticlesAdminPage() {
-  const editorRef = useRef(null);
   const [articles, setArticles] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [featuredUploading, setFeaturedUploading] = useState(false);
+  const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -49,21 +41,19 @@ export default function ArticlesAdminPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Unable to load articles');
       setArticles(data);
-    } catch (error) { toast.error(error.message); }
-    finally { setLoading(false); }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
 
-  const syncEditor = () => setForm((current) => ({ ...current, contentHtml: editorRef.current?.innerHTML || '' }));
-
-  const newArticle = () => {
-    setForm(EMPTY);
-    if (editorRef.current) editorRef.current.innerHTML = '';
-  };
+  const newArticle = () => setForm({ ...EMPTY });
 
   const editArticle = (article) => {
-    const next = {
+    setForm({
       id: article.id,
       title: article.title || '',
       slug: article.slug || '',
@@ -71,40 +61,54 @@ export default function ArticlesAdminPage() {
       contentHtml: article.content_html || '',
       featuredImageUrl: article.featured_image_url || '',
       status: article.status || 'draft',
-    };
-    setForm(next);
-    requestAnimationFrame(() => { if (editorRef.current) editorRef.current.innerHTML = next.contentHtml; });
+      category: article.category || 'AI & Technology',
+      tags: Array.isArray(article.tags) ? article.tags.join(', ') : '',
+      seoTitle: article.seo_title || '',
+      seoDescription: article.seo_description || '',
+      publishedAt: article.published_at ? (() => { const d = new Date(article.published_at); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })() : '',
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const command = (name, value = null) => {
-    editorRef.current?.focus();
-    document.execCommand(name, false, value);
-    syncEditor();
+  const uploadImage = async (file) => {
+    const body = new FormData();
+    body.append('file', file);
+    const res = await fetch('/api/articles/media', { method: 'POST', body });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Image upload failed');
+    return data.url;
   };
 
-  const addLink = () => {
-    const url = window.prompt('Paste the link URL');
-    if (url) command('createLink', url);
-  };
-
-  const handlePaste = (event) => {
-    event.preventDefault();
-    const html = event.clipboardData.getData('text/html');
-    const text = event.clipboardData.getData('text/plain');
-    const clean = html ? clientCleanHtml(html) : text.split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-    document.execCommand('insertHTML', false, clean);
-    syncEditor();
+  const uploadFeatured = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setFeaturedUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setForm((current) => ({ ...current, featuredImageUrl: url }));
+      toast.success('Featured image uploaded');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setFeaturedUploading(false);
+    }
   };
 
   const save = async (status) => {
-    const contentHtml = editorRef.current?.innerHTML || '';
     if (!form.title.trim()) return toast.error('Add an article title');
-    if (!contentHtml.replace(/<[^>]+>/g, '').trim()) return toast.error('Add article content');
+    if (!String(form.contentHtml || '').replace(/<[^>]+>/g, '').trim() && !/<(img|iframe|figure)\b/i.test(form.contentHtml || '')) {
+      return toast.error('Add article content');
+    }
 
     setSaving(true);
     try {
-      const payload = { ...form, contentHtml, status };
+      const payload = {
+        ...form,
+        status,
+        tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+        publishedAt: status === 'published' ? (form.publishedAt ? new Date(form.publishedAt).toISOString() : new Date().toISOString()) : null,
+      };
       const res = await fetch(form.id ? `/api/articles/${form.id}` : '/api/articles', {
         method: form.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,8 +119,11 @@ export default function ArticlesAdminPage() {
       toast.success(status === 'published' ? 'Article published' : 'Draft saved');
       editArticle(data);
       await load();
-    } catch (error) { toast.error(error.message); }
-    finally { setSaving(false); }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (id) => {
@@ -129,38 +136,79 @@ export default function ArticlesAdminPage() {
     load();
   };
 
+  const filtered = articles.filter((article) => `${article.title} ${article.category || ''} ${(article.tags || []).join(' ')}`.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div>
-      <PageHeader title="Articles" subtitle="Write, format, preview and publish articles to your public portfolio without redeploying the site." />
+      <PageHeader title="Articles CMS" subtitle="Create rich, media-first articles with images, YouTube, references, SEO metadata and responsive publishing without redeploying." />
 
       <div className="mb-5 flex flex-wrap gap-2">
         <Button onClick={newArticle} variant="outline"><Plus className="mr-2 h-4 w-4" /> New article</Button>
         <Link href="/articles" target="_blank"><Button variant="outline"><ExternalLink className="mr-2 h-4 w-4" /> View public articles</Button></Link>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="rounded-2xl border bg-card p-5 md:p-6">
-          <div className="space-y-5">
-            <div><label className="mb-1.5 block text-sm font-medium">Article title</label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Why AI Testing Needs Human Oversight" className="text-base" /></div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div><label className="mb-1.5 block text-sm font-medium">URL slug <span className="text-muted-foreground">(optional)</span></label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="generated-from-title" /></div>
-              <div><label className="mb-1.5 block text-sm font-medium">Featured image URL <span className="text-muted-foreground">(optional)</span></label><Input value={form.featuredImageUrl} onChange={(e) => setForm({ ...form, featuredImageUrl: e.target.value })} placeholder="https://..." /></div>
+          <div className="space-y-6">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Article title</label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="A strong, specific headline" className="h-12 text-lg font-semibold" />
             </div>
-            <div><label className="mb-1.5 block text-sm font-medium">Short summary <span className="text-muted-foreground">(optional, auto-generated if blank)</span></label><Textarea rows={3} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} placeholder="A short description shown on the article listing and when the link is shared." /></div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">URL slug <span className="text-muted-foreground">(optional)</span></label>
+                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="generated-from-title" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Category</label>
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="AI Governance" />
+              </div>
+            </div>
 
             <div>
-              <div className="mb-1.5 flex items-center justify-between"><label className="text-sm font-medium">Article content</label><span className="text-xs text-muted-foreground">Paste directly from Word</span></div>
-              <div className="flex flex-wrap gap-1 rounded-t-xl border border-b-0 bg-muted/50 p-2">
-                <Button type="button" variant="ghost" size="icon" title="Bold" onClick={() => command('bold')}><Bold className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Italic" onClick={() => command('italic')}><Italic className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Heading" onClick={() => command('formatBlock', 'h2')}><Heading2 className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Bulleted list" onClick={() => command('insertUnorderedList')}><List className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Numbered list" onClick={() => command('insertOrderedList')}><ListOrdered className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Quote" onClick={() => command('formatBlock', 'blockquote')}><Quote className="h-4 w-4" /></Button>
-                <Button type="button" variant="ghost" size="icon" title="Link" onClick={addLink}><Link2 className="h-4 w-4" /></Button>
-              </div>
-              <div ref={editorRef} contentEditable suppressContentEditableWarning onInput={syncEditor} onPaste={handlePaste} className="article-editor min-h-[460px] rounded-b-xl border bg-background p-5 text-base leading-7 outline-none focus:ring-2 focus:ring-cyan-500/30" data-placeholder="Write here, or copy your finished article from Word and paste it here..." />
+              <label className="mb-1.5 block text-sm font-medium">Tags <span className="text-muted-foreground">(comma separated)</span></label>
+              <div className="relative"><Tags className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="AI agents, cybersecurity, governance, testing" /></div>
             </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Short summary</label>
+              <Textarea rows={3} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} placeholder="A concise hook shown on article cards and social previews." />
+            </div>
+
+            <div className="rounded-2xl border bg-muted/20 p-4">
+              <div className="mb-3 flex items-center gap-2"><ImagePlus className="h-4 w-4 text-cyan-600" /><h3 className="font-semibold">Featured image</h3></div>
+              <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className="overflow-hidden rounded-xl border bg-background aspect-video">
+                  {form.featuredImageUrl ? <img src={form.featuredImageUrl} alt="Featured preview" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-sm text-muted-foreground">No image selected</div>}
+                </div>
+                <div className="space-y-3">
+                  <label className="inline-flex cursor-pointer items-center rounded-md border bg-background px-4 py-2 text-sm font-medium hover:bg-muted">
+                    <ImagePlus className="mr-2 h-4 w-4" /> {featuredUploading ? 'Uploading…' : 'Browse & upload image'}
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={uploadFeatured} disabled={featuredUploading} />
+                  </label>
+                  <Input value={form.featuredImageUrl} onChange={(e) => setForm({ ...form, featuredImageUrl: e.target.value })} placeholder="Or paste an image URL" />
+                  {form.featuredImageUrl ? <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, featuredImageUrl: '' })}>Remove featured image</Button> : null}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <label className="text-sm font-medium">Article content</label>
+                <span className="text-xs text-muted-foreground">Paste from Word • add unlimited images • YouTube • links • references</span>
+              </div>
+              <ArticleEditor key={form.id || 'new'} value={form.contentHtml} onChange={(contentHtml) => setForm((current) => ({ ...current, contentHtml }))} uploadImage={uploadImage} />
+            </div>
+
+            <details className="rounded-2xl border bg-muted/20 p-4">
+              <summary className="cursor-pointer font-semibold">SEO & publishing settings</summary>
+              <div className="mt-4 grid gap-4">
+                <div><label className="mb-1.5 block text-sm font-medium">SEO title <span className="text-muted-foreground">(optional)</span></label><Input value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} placeholder="Defaults to article title" /></div>
+                <div><label className="mb-1.5 block text-sm font-medium">SEO description <span className="text-muted-foreground">(optional)</span></label><Textarea rows={2} value={form.seoDescription} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} placeholder="Defaults to article summary" /></div>
+                <div><label className="mb-1.5 block text-sm font-medium">Publish date/time</label><div className="relative"><CalendarClock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input type="datetime-local" className="pl-9" value={form.publishedAt} onChange={(e) => setForm({ ...form, publishedAt: e.target.value })} /></div></div>
+              </div>
+            </details>
 
             <div className="flex flex-wrap gap-2 border-t pt-5">
               <Button disabled={saving} variant="outline" onClick={() => save('draft')}><Save className="mr-2 h-4 w-4" /> Save draft</Button>
@@ -170,13 +218,28 @@ export default function ArticlesAdminPage() {
           </div>
         </section>
 
-        <aside className="rounded-2xl border bg-card p-4 md:p-5">
+        <aside className="h-fit rounded-2xl border bg-card p-4 md:p-5 2xl:sticky 2xl:top-20">
           <div className="mb-4 flex items-center justify-between"><h2 className="font-display font-semibold">Your articles</h2><Badge variant="outline">{articles.length}</Badge></div>
-          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : articles.length === 0 ? <div className="rounded-xl border border-dashed p-6 text-center"><FileText className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">No articles yet.</p></div> : <div className="space-y-2">
-            {articles.map((article) => <div key={article.id} className="rounded-xl border p-3">
-              <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="line-clamp-2 text-sm font-semibold">{article.title}</p><div className="mt-1"><Badge variant="outline" className={article.status === 'published' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : ''}>{article.status}</Badge></div></div><div className="flex shrink-0"><Button size="icon" variant="ghost" onClick={() => editArticle(article)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => remove(article.id)} className="text-rose-500"><Trash2 className="h-4 w-4" /></Button></div></div>
-            </div>)}
-          </div>}
+          <div className="relative mb-4"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search articles" /></div>
+          {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : filtered.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-6 text-center"><FileText className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">No matching articles.</p></div>
+          ) : (
+            <div className="max-h-[70vh] space-y-2 overflow-y-auto pr-1 scrollbar-thin">
+              {filtered.map((article) => (
+                <div key={article.id} className="rounded-xl border p-3">
+                  <div className="flex items-start gap-3">
+                    {article.featured_image_url ? <img src={article.featured_image_url} alt="" className="h-14 w-16 rounded-lg object-cover" /> : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-semibold">{article.title}</p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{article.category || 'Uncategorised'}</p>
+                      <div className="mt-2"><Badge variant="outline" className={article.status === 'published' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : ''}>{article.status}</Badge></div>
+                    </div>
+                    <div className="flex shrink-0 flex-col"><Button size="icon" variant="ghost" onClick={() => editArticle(article)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => remove(article.id)} className="text-rose-500"><Trash2 className="h-4 w-4" /></Button></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
       </div>
     </div>

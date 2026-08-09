@@ -92,6 +92,7 @@ function Nav() {
     { label: 'AI EventOps', href: '#eventops' },
     { label: 'Projects', href: '#projects' },
     { label: 'Articles', href: '/articles' },
+    { label: 'Useful Tools', href: '/tools' },
     { label: 'Contact', href: '#contact' },
   ]
   return (
