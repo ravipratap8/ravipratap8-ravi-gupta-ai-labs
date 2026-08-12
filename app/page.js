@@ -179,17 +179,6 @@ function Nav() {
             </Button>
           </Link>
 
-          <Link href="/tools">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-300 hover:bg-white/5 hover:text-white"
-            >
-              <Wrench className="mr-1 h-4 w-4" />
-              Tools
-            </Button>
-          </Link>
-
           <Link href="/dashboard">
             <Button
               size="sm"
@@ -238,15 +227,6 @@ function Nav() {
               className="mt-2 w-full border-slate-700 bg-white/5 text-white"
             >
               Open Learning Lab
-            </Button>
-          </Link>
-
-          <Link href="/tools">
-            <Button
-              variant="outline"
-              className="mt-2 w-full border-slate-700 bg-white/5 text-white"
-            >
-              Open Useful Tools
             </Button>
           </Link>
 
