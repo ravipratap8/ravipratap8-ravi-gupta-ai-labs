@@ -60,6 +60,25 @@ export default function LearningPage() {
         </div>
       </section>
 
+      <section className="border-y border-white/5 bg-gradient-to-br from-violet-950/20 via-slate-950 to-cyan-950/15">
+        <div className="mx-auto max-w-7xl px-5 py-16 md:py-20">
+          <div className="grid gap-8 rounded-3xl border border-violet-400/20 bg-white/[0.03] p-7 md:p-10 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Flagship free module</p>
+              <h2 className="mt-3 font-display text-3xl font-bold md:text-5xl">Enterprise Quality Engineering + Supply Chain + SAP</h2>
+              <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">Follow an enterprise system end to end: understand the supply-chain business flow, learn where SAP fits, then build a quality strategy using risk-based testing, APIs, integration checks, automation and release evidence.</p>
+              <div className="mt-6 flex flex-wrap gap-2 text-xs text-slate-300">
+                {['Supply Chain Foundations', 'SAP', 'Enterprise QA', 'API & Integration', 'Automation', 'Release Evidence', 'Career Guide'].map((item) => <span key={item} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">{item}</span>)}
+              </div>
+              <Link href="/learning/enterprise-quality-engineering" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-violet-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-violet-200">Start the full module <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[['12', 'guided sections'], ['40+', 'learning points'], ['10', 'hands-on exercises'], ['1', 'capstone blueprint']].map(([value, label]) => <div key={label} className="rounded-2xl border border-white/10 bg-slate-950/60 p-5"><p className="font-display text-3xl font-bold">{value}</p><p className="mt-1 text-xs text-slate-400">{label}</p></div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="border-y border-white/5 bg-cyan-950/10">
         <div className="mx-auto max-w-7xl px-5 py-16">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">

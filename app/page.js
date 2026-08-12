@@ -48,6 +48,9 @@ import {
   BookOpen,
   Clock3,
   FileText,
+  Wrench,
+  FileUp,
+  FileDown,
 } from 'lucide-react'
 
 const ICONS = {
@@ -118,6 +121,7 @@ function Nav() {
     { label: 'AI & QE', href: '#focus' },
     { label: 'Articles', href: '#articles' },
     { label: 'Learning Lab', href: '#learning' },
+    { label: 'Tools', href: '#tools' },
     { label: 'Projects', href: '#projects' },
     { label: 'Education', href: '#education' },
   ]
@@ -175,6 +179,17 @@ function Nav() {
             </Button>
           </Link>
 
+          <Link href="/tools">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-300 hover:bg-white/5 hover:text-white"
+            >
+              <Wrench className="mr-1 h-4 w-4" />
+              Tools
+            </Button>
+          </Link>
+
           <Link href="/dashboard">
             <Button
               size="sm"
@@ -223,6 +238,15 @@ function Nav() {
               className="mt-2 w-full border-slate-700 bg-white/5 text-white"
             >
               Open Learning Lab
+            </Button>
+          </Link>
+
+          <Link href="/tools">
+            <Button
+              variant="outline"
+              className="mt-2 w-full border-slate-700 bg-white/5 text-white"
+            >
+              Open Useful Tools
             </Button>
           </Link>
 
@@ -828,6 +852,151 @@ function Learning() {
   )
 }
 
+
+function Tools() {
+  const tools = [
+    {
+      icon: FileUp,
+      eyebrow: 'Document Utility',
+      title: 'Word to PDF',
+      description:
+        'Convert Word documents into clean PDF files directly from the browser. A simple utility for assignments, reports, CVs, business documents and everyday document sharing.',
+      href: '/tools/word-to-pdf',
+      tags: ['DOCX', 'PDF', 'Browser Tool'],
+      action: 'Convert Word to PDF',
+    },
+    {
+      icon: FileDown,
+      eyebrow: 'Document Utility',
+      title: 'PDF to Word',
+      description:
+        'Turn PDF documents into editable Word files when you need to reuse, revise or work with document content instead of starting again from scratch.',
+      href: '/tools/pdf-to-word',
+      tags: ['PDF', 'DOCX', 'Editable Output'],
+      action: 'Convert PDF to Word',
+    },
+  ]
+
+  return (
+    <section
+      id="tools"
+      className="border-t border-white/5 bg-white/[0.015] py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-3xl">
+            <Badge className="mb-4 gap-1.5 border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/10">
+              <Wrench className="h-3.5 w-3.5" />
+              Useful Tools
+            </Badge>
+
+            <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
+              Small tools that solve real everyday problems.
+            </h2>
+
+            <p className="mt-4 text-lg leading-relaxed text-slate-300">
+              The portfolio is not only about reading and demonstrations.
+              These free browser-based utilities are practical tools people
+              can actually use. More engineering and productivity utilities
+              can be added here over time without turning the site into a
+              collection of gimmicks.
+            </p>
+          </div>
+
+          <Link
+            href="/tools"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300"
+          >
+            View all tools
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {tools.map((tool) => {
+            const Icon = tool.icon
+
+            return (
+              <Link
+                key={tool.href}
+                href={tool.href}
+                className="group rounded-3xl border border-white/10 bg-slate-950/60 p-7 transition hover:-translate-y-1 hover:border-cyan-400/30"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                    <Icon className="h-6 w-6" />
+                  </span>
+
+                  <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-500">
+                    Free to use
+                  </span>
+                </div>
+
+                <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                  {tool.eyebrow}
+                </p>
+
+                <h3 className="mt-2 font-display text-2xl font-bold text-white">
+                  {tool.title}
+                </h3>
+
+                <p className="mt-3 leading-relaxed text-slate-400">
+                  {tool.description}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {tool.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="border-slate-700 bg-transparent text-slate-300"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="mt-7 flex items-center justify-between border-t border-white/10 pt-5">
+                  <span className="text-sm font-semibold text-cyan-400">
+                    {tool.action}
+                  </span>
+
+                  <ChevronRight className="h-5 w-5 text-cyan-400 transition group-hover:translate-x-1" />
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-400/5 to-violet-400/5 p-5">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <p className="font-semibold text-white">
+                Practical utilities will keep growing.
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                Document tools are the starting point. The goal is to add
+                useful engineering, testing and productivity utilities where
+                they provide genuine value.
+              </p>
+            </div>
+
+            <Link href="/tools">
+              <Button
+                variant="outline"
+                className="shrink-0 border-slate-700 bg-white/5 text-white hover:bg-white/10"
+              >
+                <Wrench className="mr-2 h-4 w-4" />
+                Explore Tools
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function EventOps() {
   const features = [
     {
@@ -1313,6 +1482,9 @@ export default function App() {
 
       {/* Interactive modules complement the articles rather than replacing them. */}
       <Learning />
+
+      {/* Useful browser utilities remain visible as a practical part of the portfolio. */}
+      <Tools />
 
       <EventOps />
       <Projects />
