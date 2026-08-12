@@ -12,7 +12,9 @@ import {
   ABOUT,
   STATS,
   SKILLS,
+  EDUCATION,
   CERTIFICATIONS,
+  LEARNING_MODULES,
   PROJECTS,
   HERO_BG,
 } from '@/lib/brand'
@@ -25,17 +27,27 @@ import {
   Cloud,
   Users,
   MessagesSquare,
-  Bot,
   GanttChartSquare,
   Cpu,
   Mail,
   Linkedin,
-  Download,
   ChevronRight,
   Menu,
   X,
   CheckCircle2,
   Star,
+  FlaskConical,
+  BrainCircuit,
+  Code2,
+  Network,
+  GraduationCap,
+  Layers3,
+  Activity,
+  ScrollText,
+  ExternalLink,
+  BookOpen,
+  Clock3,
+  FileText,
 } from 'lucide-react'
 
 const ICONS = {
@@ -44,21 +56,74 @@ const ICONS = {
   Users,
 }
 
+const LEARNING_ICONS = [
+  BrainCircuit,
+  Code2,
+  Network,
+]
+
+const ARTICLES = [
+  {
+    category: 'API Testing',
+    title: 'API Testing Beyond Status Codes: Testing the System Contract',
+    description:
+      'Why meaningful API testing goes far beyond checking 200 responses and must validate contracts, business rules, state transitions and failure behaviour.',
+    href: '/articles/api-testing-beyond-status-codes-system-contracts',
+    readTime: 'Quality Engineering',
+    icon: Network,
+  },
+  {
+    category: 'Production Quality',
+    title: 'Tests Passed. Now Debug Production.',
+    description:
+      'Passing tests are only one source of evidence. Production observability, telemetry and runtime behaviour are equally important to release confidence.',
+    href: '/articles/tests-passed-debug-production-observability',
+    readTime: 'Observability',
+    icon: Activity,
+  },
+  {
+    category: 'AI & Quality Engineering',
+    title: 'AI-Generated Code Changes the QA Trust Model',
+    description:
+      'When software can be generated faster than humans can validate it, quality engineering must move from execution volume towards evidence, risk and trust.',
+    href: '/articles/ai-generated-code-qa-trust-quality-engineering',
+    readTime: 'AI Engineering',
+    icon: BrainCircuit,
+  },
+  {
+    category: 'AI Governance',
+    title: 'AI Agents, Human Control and Governance',
+    description:
+      'Agentic AI becomes useful when capability is matched with permissions, risk controls, human oversight and auditability.',
+    href: '/articles/ai-agents-human-control-governance',
+    readTime: 'AI Governance',
+    icon: ShieldCheck,
+  },
+  {
+    category: 'AI Testing',
+    title: 'AI-Generated Tests: Who Tests the Tests?',
+    description:
+      'AI can generate test cases quickly, but generated volume is not the same as meaningful coverage, correctness or confidence.',
+    href: '/articles/ai-generated-tests-who-tests-the-tests',
+    readTime: 'Test Strategy',
+    icon: Code2,
+  },
+]
+
 function Nav() {
   const [open, setOpen] = useState(false)
 
   const links = [
     { label: 'About', href: '#about' },
-    { label: 'Skills', href: '#skills' },
-    { label: 'AI EventOps', href: '#eventops' },
+    { label: 'AI & QE', href: '#focus' },
+    { label: 'Articles', href: '#articles' },
+    { label: 'Learning Lab', href: '#learning' },
     { label: 'Projects', href: '#projects' },
-    { label: 'Articles', href: '/articles' },
-    { label: 'Useful Tools', href: '/tools' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Education', href: '#education' },
   ]
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-slate-950/70 backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-slate-950/75 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-sm font-bold text-slate-950">
@@ -75,36 +140,38 @@ function Nav() {
           </div>
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex">
-          {links.map((link) =>
-            link.href.startsWith('/') ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-slate-300 transition hover:text-cyan-400"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm text-slate-300 transition hover:text-cyan-400"
-              >
-                {link.label}
-              </a>
-            )
-          )}
+        <div className="hidden items-center gap-6 lg:flex">
+          {links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-sm text-slate-300 transition hover:text-cyan-400"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login">
+          <Link href="/articles">
             <Button
               variant="ghost"
               size="sm"
               className="text-slate-300 hover:bg-white/5 hover:text-white"
             >
-              Sign in
+              <BookOpen className="mr-1 h-4 w-4" />
+              Articles
+            </Button>
+          </Link>
+
+          <Link href="/learning">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-300 hover:bg-white/5 hover:text-white"
+            >
+              <FlaskConical className="mr-1 h-4 w-4" />
+              Learning
             </Button>
           </Link>
 
@@ -113,17 +180,16 @@ function Nav() {
               size="sm"
               className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
             >
-              Launch AI Demo
+              Explore AI Demo
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
         </div>
 
         <button
-          type="button"
-          aria-label="Toggle navigation"
           className="text-white md:hidden"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle navigation"
         >
           {open ? <X /> : <Menu />}
         </button>
@@ -131,44 +197,40 @@ function Nav() {
 
       {open && (
         <div className="border-t border-white/5 bg-slate-950 px-5 py-4 md:hidden">
-          {links.map((link) =>
-            link.href.startsWith('/') ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="block py-2 text-slate-300 transition hover:text-cyan-400"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="block py-2 text-slate-300 transition hover:text-cyan-400"
-              >
-                {link.label}
-              </a>
-            )
-          )}
+          {links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="block py-2 text-slate-300"
+            >
+              {link.label}
+            </a>
+          ))}
 
-          <div className="mt-4 grid gap-2">
-            <Link href="/login" onClick={() => setOpen(false)}>
-              <Button
-                variant="outline"
-                className="w-full border-slate-700 bg-white/5 text-white"
-              >
-                Sign in
-              </Button>
-            </Link>
+          <Link href="/articles">
+            <Button
+              variant="outline"
+              className="mt-3 w-full border-slate-700 bg-white/5 text-white"
+            >
+              Read Articles
+            </Button>
+          </Link>
 
-            <Link href="/dashboard" onClick={() => setOpen(false)}>
-              <Button className="w-full bg-cyan-400 text-slate-950">
-                Launch AI Demo
-              </Button>
-            </Link>
-          </div>
+          <Link href="/learning">
+            <Button
+              variant="outline"
+              className="mt-2 w-full border-slate-700 bg-white/5 text-white"
+            >
+              Open Learning Lab
+            </Button>
+          </Link>
+
+          <Link href="/dashboard">
+            <Button className="mt-2 w-full bg-cyan-400 text-slate-950">
+              Explore AI Demo
+            </Button>
+          </Link>
         </div>
       )}
     </header>
@@ -189,68 +251,77 @@ function Hero() {
         <div className="absolute inset-0 bg-grid opacity-40" />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 md:grid-cols-2">
-        <div className="animate-fade-up">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 md:grid-cols-[1.15fr_.85fr]">
+        <div>
           <Badge className="mb-5 gap-1.5 border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/10">
             <MapPin className="h-3.5 w-3.5" />
-            {PROFILE.location} • {PROFILE.status}
+            {PROFILE.location}
           </Badge>
 
-          <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-white md:text-7xl">
-            Ravi Gupta
+          <h1 className="font-display text-5xl font-bold leading-[1.03] tracking-tight text-white md:text-7xl">
+            Quality engineering for the AI era.
           </h1>
 
-          <p className="mt-4 bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300 bg-clip-text text-lg font-semibold text-transparent md:text-2xl">
+          <p className="mt-5 bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300 bg-clip-text text-lg font-semibold text-transparent md:text-2xl">
             {PROFILE.tagline}
           </p>
 
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 md:text-lg">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 md:text-lg">
             {PROFILE.intro}
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/dashboard">
+            <Link href="/learning">
               <Button
                 size="lg"
                 className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
               >
-                <Sparkles className="mr-2 h-4 w-4" />
-                View AI EventOps Demo
-              </Button>
-            </Link>
-
-            <Link href="/tools">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-slate-700 bg-white/5 text-white hover:bg-white/10"
-              >
-                Explore QA Tools
+                <FlaskConical className="mr-2 h-4 w-4" />
+                Try the Learning Lab
               </Button>
             </Link>
 
             <Link href="/articles">
               <Button
                 size="lg"
-                variant="ghost"
-                className="text-slate-300 hover:text-white"
+                variant="outline"
+                className="border-slate-700 bg-white/5 text-white hover:bg-white/10"
               >
+                <BookOpen className="mr-2 h-4 w-4" />
                 Read Articles
+              </Button>
+            </Link>
+
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-slate-700 bg-white/5 text-white hover:bg-white/10"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Explore AI EventOps
               </Button>
             </Link>
           </div>
 
-          <div className="mt-8 flex items-center gap-2 text-sm text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-cyan-400" />
-            Currently {PROFILE.currentRole}
+          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-cyan-400" />
+              {PROFILE.currentRole}
+            </span>
+
+            <span className="inline-flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-violet-300" />
+              Master of Management in progress
+            </span>
           </div>
         </div>
 
         <div className="relative mx-auto">
-          <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-cyan-500/30 to-violet-500/20 blur-3xl" />
+          <div className="absolute -inset-8 rounded-full bg-gradient-to-tr from-cyan-500/30 to-violet-500/20 blur-3xl" />
 
           <div className="relative">
-            <div className="mx-auto h-72 w-72 overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-cyan-500/10 md:h-96 md:w-80">
+            <div className="mx-auto h-80 w-72 overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-cyan-500/10 md:h-[430px] md:w-80">
               <img
                 src={PROFILE.photo}
                 alt="Ravi Gupta"
@@ -258,7 +329,7 @@ function Hero() {
               />
             </div>
 
-            <div className="absolute -left-6 top-10 animate-float rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur md:-left-12">
+            <div className="absolute -left-8 top-10 rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur">
               <div className="flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-400/15 text-cyan-300">
                   <BadgeCheck className="h-4 w-4" />
@@ -266,30 +337,27 @@ function Hero() {
 
                 <div>
                   <p className="text-xs font-semibold text-white">
-                    ISTQB
+                    Quality Leadership
                   </p>
                   <p className="text-[10px] text-slate-400">
-                    Test Manager
+                    19+ years
                   </p>
                 </div>
               </div>
             </div>
 
-            <div
-              className="absolute -right-4 bottom-10 animate-float rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur md:-right-10"
-              style={{ animationDelay: '1.5s' }}
-            >
+            <div className="absolute -right-8 bottom-12 rounded-2xl border border-white/10 bg-slate-900/90 p-3 shadow-xl backdrop-blur">
               <div className="flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-violet-400/15 text-violet-300">
-                  <Bot className="h-4 w-4" />
+                  <BrainCircuit className="h-4 w-4" />
                 </span>
 
                 <div>
                   <p className="text-xs font-semibold text-white">
-                    AI Builder
+                    Applied AI
                   </p>
                   <p className="text-[10px] text-slate-400">
-                    Human-in-loop
+                    Governed workflows
                   </p>
                 </div>
               </div>
@@ -304,10 +372,9 @@ function Hero() {
             key={stat.label}
             className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center"
           >
-            <p className="font-display text-3xl font-bold text-white md:text-4xl">
+            <p className="font-display text-2xl font-bold text-white md:text-3xl">
               {stat.value}
             </p>
-
             <p className="mt-1 text-xs text-slate-400">
               {stat.label}
             </p>
@@ -319,28 +386,60 @@ function Hero() {
 }
 
 function About() {
+  const waysOfWorking = [
+    [
+      '1',
+      'Understand the business risk',
+      'Start with what can fail, who is affected and what evidence is needed.',
+    ],
+    [
+      '2',
+      'Design for testability and control',
+      'Make system state, AI confidence, approvals, logs and interfaces observable.',
+    ],
+    [
+      '3',
+      'Automate the right things',
+      'Use APIs, Playwright, CI/CD and reusable patterns where automation improves feedback.',
+    ],
+    [
+      '4',
+      'Keep humans in high-impact decisions',
+      'AI can accelerate work without silently inheriting authority it should not have.',
+    ],
+  ]
+
   return (
     <section
       id="about"
       className="border-t border-white/5 py-24"
     >
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 md:grid-cols-2">
-        <div className="relative">
-          <div className="overflow-hidden rounded-3xl border border-white/10">
-            <img
-              src="https://images.pexels.com/photos/577210/pexels-photo-577210.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-              alt="Quality engineering dashboard"
-              className="h-full w-full object-cover"
-            />
-          </div>
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-[.85fr_1.15fr]">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-400/10 to-violet-400/5 p-7 md:p-9">
+          <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400">
+            How I work
+          </p>
 
-          <div className="absolute -bottom-5 -right-5 rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl">
-            <p className="font-display text-2xl font-bold text-cyan-400">
-              19+ yrs
-            </p>
-            <p className="text-xs text-slate-400">
-              Quality engineering
-            </p>
+          <div className="mt-6 space-y-5">
+            {waysOfWorking.map(([number, title, text]) => (
+              <div
+                key={number}
+                className="flex gap-4"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 font-display font-bold text-cyan-300">
+                  {number}
+                </span>
+
+                <div>
+                  <p className="font-semibold text-white">
+                    {title}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                    {text}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -349,8 +448,8 @@ function About() {
             About
           </p>
 
-          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Delivery leadership meets hands-on engineering
+          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-5xl">
+            Leadership experience, backed by hands-on engineering.
           </h2>
 
           <div className="mt-6 space-y-4 text-slate-300">
@@ -364,15 +463,16 @@ function About() {
             ))}
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-7 flex flex-wrap gap-2">
             {[
-              'SAP WMS/TMS/EWM',
-              'Playwright',
-              'CI/CD',
               'AI Governance',
-              'Selenium',
-              'Rest Assured',
-              'TOSCA',
+              'Playwright',
+              'API Testing',
+              'SAP WMS/TMS/EWM',
+              'CI/CD',
+              'MCP',
+              'Human-in-the-loop',
+              'Test Strategy',
             ].map((tag) => (
               <Badge
                 key={tag}
@@ -383,6 +483,92 @@ function About() {
               </Badge>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Focus() {
+  const areas = [
+    {
+      icon: BrainCircuit,
+      title: 'Applied AI Engineering',
+      text: 'Design AI workflows around grounding, confidence, risk, safe fallback, human approval and auditable action.',
+    },
+    {
+      icon: ShieldCheck,
+      title: 'AI Quality & Governance',
+      text: 'Evaluate behaviour, hallucination risk, prompt changes, model uncertainty and control effectiveness, not just whether the API responded.',
+    },
+    {
+      icon: Code2,
+      title: 'Modern Test Automation',
+      text: 'Build maintainable Playwright and API automation around business outcomes, deterministic state and CI feedback.',
+    },
+    {
+      icon: Layers3,
+      title: 'Enterprise Quality Strategy',
+      text: 'Connect functional, integration, automation, data and release evidence across complex delivery programmes.',
+    },
+    {
+      icon: Activity,
+      title: 'Observability & Release Confidence',
+      text: 'Use test evidence and production signals together. A green pipeline is not proof that a system is healthy in production.',
+    },
+    {
+      icon: ScrollText,
+      title: 'MCP & Agent-ready Design',
+      text: 'Shape business capabilities as controlled tools so future agents can act through explicit permissions and auditable interfaces.',
+    },
+  ]
+
+  return (
+    <section
+      id="focus"
+      className="border-t border-white/5 bg-white/[0.015] py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="max-w-3xl">
+          <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">
+            Current focus
+          </p>
+
+          <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-5xl">
+            Where AI engineering and quality engineering meet.
+          </h2>
+
+          <p className="mt-4 text-lg leading-relaxed text-slate-300">
+            The interesting problem is no longer whether AI can generate an
+            answer. It is whether the surrounding system can make that answer
+            useful, testable, explainable and safe enough for the business
+            context.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {areas.map((area) => {
+            const Icon = area.icon
+
+            return (
+              <div
+                key={area.title}
+                className="rounded-3xl border border-white/10 bg-slate-950/60 p-6 transition hover:border-cyan-400/25"
+              >
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                  <Icon className="h-5 w-5" />
+                </span>
+
+                <h3 className="mt-5 font-display text-lg font-semibold text-white">
+                  {area.title}
+                </h3>
+
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                  {area.text}
+                </p>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -402,7 +588,7 @@ function Skills() {
           </p>
 
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Key skills
+            Engineering breadth with a quality core
           </h2>
         </div>
 
@@ -410,7 +596,7 @@ function Skills() {
           {SKILLS.map((skill) => (
             <div
               key={skill.group}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-cyan-400/30 hover:bg-white/[0.05]"
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-cyan-400/30"
             >
               <h3 className="font-display text-base font-semibold text-white">
                 {skill.group}
@@ -435,27 +621,234 @@ function Skills() {
   )
 }
 
+function Articles() {
+  return (
+    <section
+      id="articles"
+      className="border-t border-white/5 bg-white/[0.015] py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-3xl">
+            <Badge className="mb-4 gap-1.5 border-violet-400/30 bg-violet-400/10 text-violet-300 hover:bg-violet-400/10">
+              <BookOpen className="h-3.5 w-3.5" />
+              Engineering Notes
+            </Badge>
+
+            <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
+              Ideas from the intersection of AI, testing and engineering.
+            </h2>
+
+            <p className="mt-4 text-lg leading-relaxed text-slate-300">
+              Practical observations on AI engineering, quality strategy,
+              automation, APIs, governance and what changes when software
+              systems become increasingly AI-assisted.
+            </p>
+          </div>
+
+          <Link
+            href="/articles"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300"
+          >
+            Browse all articles
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {ARTICLES.slice(0, 4).map((article, index) => {
+            const Icon = article.icon
+
+            return (
+              <Link
+                key={article.href}
+                href={article.href}
+                className={`group rounded-3xl border border-white/10 bg-slate-950/60 p-6 transition hover:-translate-y-1 hover:border-cyan-400/30 ${
+                  index === 0 ? 'md:col-span-2' : ''
+                }`}
+              >
+                <div
+                  className={
+                    index === 0
+                      ? 'grid gap-6 md:grid-cols-[auto_1fr_auto] md:items-center'
+                      : ''
+                  }
+                >
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                    <Icon className="h-6 w-6" />
+                  </span>
+
+                  <div className={index === 0 ? '' : 'mt-5'}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                        {article.category}
+                      </p>
+
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {article.readTime}
+                      </span>
+                    </div>
+
+                    <h3
+                      className={`mt-2 font-display font-bold text-white ${
+                        index === 0
+                          ? 'text-2xl md:text-3xl'
+                          : 'text-xl'
+                      }`}
+                    >
+                      {article.title}
+                    </h3>
+
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+                      {article.description}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`inline-flex items-center gap-1 font-semibold text-cyan-400 ${
+                      index === 0
+                        ? 'mt-5 text-sm md:mt-0'
+                        : 'mt-6 text-sm'
+                    }`}
+                  >
+                    Read
+                    <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <Link href="/articles">
+            <Button
+              variant="outline"
+              className="border-slate-700 bg-white/5 text-white hover:bg-white/10"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              View all published articles
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Learning() {
+  return (
+    <section
+      id="learning"
+      className="border-t border-white/5 bg-gradient-to-b from-cyan-950/10 to-slate-950 py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-3xl">
+            <Badge className="mb-4 gap-1.5 border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/10">
+              <FlaskConical className="h-3.5 w-3.5" />
+              Interactive Learning Lab
+            </Badge>
+
+            <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
+              Learn by making the decision.
+            </h2>
+
+            <p className="mt-4 text-lg leading-relaxed text-slate-300">
+              Short, practical labs that teach the judgement behind AI
+              governance, browser automation and API quality. No passive slide
+              deck pretending to be learning.
+            </p>
+          </div>
+
+          <Link
+            href="/learning"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300"
+          >
+            View all modules
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          {LEARNING_MODULES.map((module, index) => {
+            const Icon = LEARNING_ICONS[index] || FlaskConical
+
+            return (
+              <Link
+                key={module.href}
+                href={module.href}
+                className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 transition hover:-translate-y-1 hover:border-cyan-400/30"
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                  <Icon className="h-6 w-6" />
+                </span>
+
+                <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                  {module.eyebrow}
+                </p>
+
+                <h3 className="mt-2 font-display text-xl font-bold text-white">
+                  {module.title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                  {module.description}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {module.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-7 flex items-center justify-between border-t border-white/10 pt-5 text-sm">
+                  <span className="text-slate-500">
+                    {module.lessons}
+                  </span>
+
+                  <span className="inline-flex items-center gap-1 font-semibold text-cyan-400">
+                    Start
+                    <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function EventOps() {
   const features = [
     {
       icon: MessagesSquare,
-      title: 'AI Customer Enquiry Assistant',
-      desc: 'WhatsApp-style inbox with grounded AI draft replies and confidence scoring.',
+      title: 'Grounded AI Drafts',
+      desc: 'AI assists with customer enquiries using workflow context rather than operating as an isolated chatbot.',
     },
     {
       icon: ShieldCheck,
-      title: 'Human-in-the-loop Approvals',
-      desc: 'AI never auto-sends. Every reply is reviewed, with risk levels and audit logs.',
+      title: 'Human Approval',
+      desc: 'High-impact output remains reviewable before action, with confidence and risk visible to the user.',
     },
     {
-      icon: Sparkles,
-      title: 'AI Content Generator',
-      desc: 'Generate social posts, reel scripts, emails and FAQ pages per event.',
+      icon: ScrollText,
+      title: 'Auditability',
+      desc: 'Prompt context, AI output, decision signals and human actions can be captured as evidence.',
     },
     {
       icon: GanttChartSquare,
-      title: 'Smart Lead Capture (CRM)',
-      desc: 'Auto-classify enquiries into a sales pipeline: hot leads, sponsors, vendors.',
+      title: 'Workflow, not Chat',
+      desc: 'AI is embedded into enquiry, approval, content and lead-management tasks with clear business state.',
     },
   ]
 
@@ -468,63 +861,64 @@ function EventOps() {
         <div className="mb-12 max-w-3xl">
           <Badge className="mb-4 gap-1.5 border-violet-400/30 bg-violet-400/10 text-violet-300 hover:bg-violet-400/10">
             <Cpu className="h-3.5 w-3.5" />
-            Featured AI Application
+            Working AI Demonstration
           </Badge>
 
           <h2 className="font-display text-3xl font-bold text-white md:text-5xl">
             AI EventOps Assistant
           </h2>
 
-          <p className="mt-4 text-lg text-slate-300">
-            A production-style SaaS for event organisers — AI-drafted customer
-            replies, human-in-the-loop approvals, lead capture and content
-            generation, built with the test governance of an AI Test Manager.
+          <p className="mt-4 text-lg leading-relaxed text-slate-300">
+            A practical demonstration of how AI can improve a business workflow
+            without being allowed to silently make every decision.
           </p>
         </div>
 
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="grid gap-4 sm:grid-cols-2">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300">
-                  <feature.icon className="h-5 w-5" />
-                </span>
+            {features.map((feature) => {
+              const Icon = feature.icon
 
-                <h3 className="mt-4 font-display text-base font-semibold text-white">
-                  {feature.title}
-                </h3>
+              return (
+                <div
+                  key={feature.title}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+                >
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300">
+                    <Icon className="h-5 w-5" />
+                  </span>
 
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
+                  <h3 className="mt-4 font-display text-base font-semibold text-white">
+                    {feature.title}
+                  </h3>
+
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                    {feature.desc}
+                  </p>
+                </div>
+              )
+            })}
           </div>
 
-          <div className="relative">
+          <div>
             <div className="overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-cyan-500/10">
               <img
                 src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-                alt="AI EventOps Assistant"
+                alt="AI engineering workspace"
                 className="h-full w-full object-cover"
               />
             </div>
 
-            <div className="mt-6">
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:opacity-90"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Launch the live demo — no signup needed
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                className="mt-6 w-full bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:opacity-90"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Explore the working demo
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -539,13 +933,13 @@ function Projects() {
       className="border-t border-white/5 py-24"
     >
       <div className="mx-auto max-w-7xl px-5">
-        <div className="mb-12 text-center">
+        <div className="mb-12">
           <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">
-            Portfolio
+            Build portfolio
           </p>
 
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Selected projects
+            Working ideas, patterns and engineering demonstrations
           </h2>
         </div>
 
@@ -602,13 +996,75 @@ function Projects() {
                     href={project.href}
                     className="mt-5 inline-flex items-center text-sm font-medium text-cyan-400 hover:text-cyan-300"
                   >
-                    Open demo
+                    Explore
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 )}
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Education() {
+  return (
+    <section
+      id="education"
+      className="border-t border-white/5 bg-white/[0.015] py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr]">
+          <div>
+            <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">
+              Education & development
+            </p>
+
+            <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-5xl">
+              Still learning. Deliberately.
+            </h2>
+
+            <p className="mt-4 text-slate-300">
+              Technical experience is strongest when it is combined with
+              business judgement, communication and an understanding of how
+              organisations actually make decisions.
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            {EDUCATION.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-3xl border border-white/10 bg-slate-950/60 p-6 md:p-7"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-cyan-300" />
+
+                      <h3 className="font-display text-xl font-semibold text-white">
+                        {item.title}
+                      </h3>
+                    </div>
+
+                    <p className="mt-1 text-sm text-cyan-400">
+                      {item.status}
+                    </p>
+                  </div>
+
+                  <Badge className="border-violet-400/20 bg-violet-400/10 text-violet-300 hover:bg-violet-400/10">
+                    {item.highlight}
+                  </Badge>
+                </div>
+
+                <p className="mt-4 text-sm leading-relaxed text-slate-400">
+                  {item.detail}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -625,17 +1081,17 @@ function Certifications() {
           </p>
 
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Certifications
+            Professional certifications
           </h2>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {CERTIFICATIONS.map((certification) => {
-            const Icon = ICONS[certification.icon] || BadgeCheck
+          {CERTIFICATIONS.map((cert) => {
+            const Icon = ICONS[cert.icon] || BadgeCheck
 
             return (
               <div
-                key={certification.name}
+                key={cert.name}
                 className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6"
               >
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-violet-400/20 text-cyan-300">
@@ -644,11 +1100,11 @@ function Certifications() {
 
                 <div>
                   <h3 className="font-display font-semibold text-white">
-                    {certification.name}
+                    {cert.name}
                   </h3>
 
                   <p className="text-sm text-slate-400">
-                    {certification.issuer}
+                    {cert.issuer}
                   </p>
                 </div>
               </div>
@@ -665,6 +1121,7 @@ function Contact() {
 
   const onSubmit = (event) => {
     event.preventDefault()
+
     setSending(true)
 
     const form = event.currentTarget
@@ -672,13 +1129,15 @@ function Contact() {
     setTimeout(() => {
       setSending(false)
 
-      toast.success('Thanks! Your message has been received.', {
-        description:
-          'Ravi will get back to you shortly. (Demo — Resend email wiring is a placeholder.)',
-      })
+      toast.success(
+        'Thanks. Your message has been received.',
+        {
+          description: 'Ravi will get back to you shortly.',
+        }
+      )
 
       form.reset()
-    }, 800)
+    }, 700)
   }
 
   return (
@@ -689,16 +1148,16 @@ function Contact() {
       <div className="mx-auto grid max-w-7xl gap-12 px-5 md:grid-cols-2">
         <div>
           <p className="font-display text-sm font-semibold uppercase tracking-widest text-cyan-400">
-            Get in touch
+            Connect
           </p>
 
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Let&apos;s build something with quality at its core
+            Talk engineering, quality, AI or practical delivery.
           </h2>
 
           <p className="mt-4 text-slate-300">
-            Open to senior technology leadership, test management, and AI
-            solution roles across New Zealand and Australia.
+            I use this site to share working ideas, experiments and lessons
+            from quality engineering and applied AI.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -709,6 +1168,7 @@ function Contact() {
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5">
                 <Mail className="h-5 w-5" />
               </span>
+
               {PROFILE.email}
             </a>
 
@@ -721,13 +1181,17 @@ function Contact() {
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5">
                 <Linkedin className="h-5 w-5" />
               </span>
-              LinkedIn profile
+
+              LinkedIn
+
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
 
             <div className="flex items-center gap-3 text-slate-300">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/5">
                 <MapPin className="h-5 w-5" />
               </span>
+
               {PROFILE.location}
             </div>
           </div>
@@ -752,14 +1216,14 @@ function Contact() {
             />
 
             <Input
-              placeholder="Company / role"
+              placeholder="Company / area of interest"
               className="border-slate-700 bg-slate-900/60 text-white placeholder:text-slate-500"
             />
 
             <Textarea
               required
               rows={4}
-              placeholder="How can Ravi help?"
+              placeholder="What would you like to discuss?"
               className="border-slate-700 bg-slate-900/60 text-white placeholder:text-slate-500"
             />
 
@@ -770,6 +1234,7 @@ function Contact() {
               className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
             >
               {sending ? 'Sending…' : 'Send message'}
+
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -781,10 +1246,7 @@ function Contact() {
 
 function Footer() {
   return (
-    <footer
-      id="resume"
-      className="border-t border-white/5 py-12"
-    >
+    <footer className="border-t border-white/5 py-10">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 md:flex-row">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 font-display text-xs font-bold text-slate-950">
@@ -792,25 +1254,11 @@ function Footer() {
           </span>
 
           <p className="text-sm text-slate-400">
-            © {new Date().getFullYear()} Ravi Gupta — ravigupta.dev
+            © {new Date().getFullYear()} Ravi Gupta · AI Labs
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-          <a
-            href="#about"
-            className="hover:text-cyan-400"
-          >
-            About
-          </a>
-
-          <Link
-            href="/dashboard"
-            className="hover:text-cyan-400"
-          >
-            AI Demo
-          </Link>
-
+        <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-slate-400">
           <Link
             href="/articles"
             className="hover:text-cyan-400"
@@ -819,38 +1267,59 @@ function Footer() {
           </Link>
 
           <Link
-            href="/tools"
+            href="/learning"
             className="hover:text-cyan-400"
           >
-            Useful Tools
+            Learning Lab
           </Link>
 
           <Link
-            href="/login"
+            href="/dashboard"
             className="hover:text-cyan-400"
           >
-            Sign in
+            AI Demo
           </Link>
+
+          <a
+            href="#projects"
+            className="hover:text-cyan-400"
+          >
+            Projects
+          </a>
+
+          <a
+            href="#about"
+            className="hover:text-cyan-400"
+          >
+            About
+          </a>
         </div>
       </div>
     </footer>
   )
 }
 
-function App() {
+export default function App() {
   return (
     <main className="min-h-screen bg-slate-950 font-sans text-white selection:bg-cyan-400/30">
       <Nav />
       <Hero />
       <About />
+      <Focus />
       <Skills />
+
+      {/* Published writing remains a core part of the portfolio. */}
+      <Articles />
+
+      {/* Interactive modules complement the articles rather than replacing them. */}
+      <Learning />
+
       <EventOps />
       <Projects />
+      <Education />
       <Certifications />
       <Contact />
       <Footer />
     </main>
   )
 }
-
-export default App
