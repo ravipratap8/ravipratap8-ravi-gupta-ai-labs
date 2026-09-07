@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { PortfolioAtmosphere } from '@/components/cinematic/portfolio-atmosphere'
+import { SceneReveal } from '@/components/cinematic/scene-reveal'
+import { AILabsUniverse, GovernanceFlowScene } from '@/components/cinematic/cinematic-director'
+import { CapabilityTimeMachine, CinematicHero, ProjectUniverseCinema } from '@/components/cinematic/cinematic-experience'
 import {
   PROFILE,
   ABOUT,
@@ -1450,27 +1454,61 @@ function Footer() {
 
 export default function App() {
   return (
-    <main className="min-h-screen bg-slate-950 font-sans text-white selection:bg-cyan-400/30">
+    <main className="cinematic-home min-h-screen bg-slate-950 font-sans text-white selection:bg-cyan-400/30">
+      <PortfolioAtmosphere />
       <Nav />
-      <Hero />
-      <About />
-      <Focus />
-      <Skills />
+
+      <CinematicHero />
+      <SceneReveal className="cinematic-scene" delay={60}>
+        <About />
+      </SceneReveal>
+
+      <CapabilityTimeMachine />
+
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Focus />
+      </SceneReveal>
+
+      <AILabsUniverse />
+      <GovernanceFlowScene />
+
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Skills />
+      </SceneReveal>
 
       {/* Published writing remains a core part of the portfolio. */}
-      <Articles />
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Articles />
+      </SceneReveal>
 
       {/* Interactive modules complement the articles rather than replacing them. */}
-      <Learning />
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Learning />
+      </SceneReveal>
 
       {/* Useful browser utilities remain visible as a practical part of the portfolio. */}
-      <Tools />
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Tools />
+      </SceneReveal>
 
-      <EventOps />
-      <Projects />
-      <Education />
-      <Certifications />
-      <Contact />
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <EventOps />
+      </SceneReveal>
+
+      <ProjectUniverseCinema />
+
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Projects />
+      </SceneReveal>
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Education />
+      </SceneReveal>
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Certifications />
+      </SceneReveal>
+      <SceneReveal className="cinematic-scene" delay={80}>
+        <Contact />
+      </SceneReveal>
       <Footer />
     </main>
   )

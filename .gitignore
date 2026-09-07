@@ -84,4 +84,5 @@ agenthub/agents/youtube/db/
 # Mobile / platform-specific binaries
 android-sdk/
 node_modules/@next/swc-linux-arm64-musl/
-node_modules/@next/swc-linux-arm64-gnu/
+node_modules/@next/swc-linux-arm64-gnu/ravipratap8-ravi-gupta-ai-labs-main.local
+.env.local
