@@ -1433,6 +1433,10 @@ function Footer() {
             AI Demo
           </Link>
 
+          <Link href="/job-search" className="hover:text-cyan-400">
+            Personal Job Search
+          </Link>
+
           <a
             href="#projects"
             className="hover:text-cyan-400"

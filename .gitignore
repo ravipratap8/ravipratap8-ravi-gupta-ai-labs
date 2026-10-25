@@ -18,6 +18,8 @@ node_modules/
 # Testing
 coverage/
 test_reports/
+test-results/
+playwright-report/
 
 # Next.js
 .next/
