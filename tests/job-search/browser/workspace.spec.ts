@@ -177,3 +177,84 @@ test("mobile layout and server error remain usable without false success", async
     fullPage: true,
   });
 });
+
+for (const format of ["txt", "docx", "pdf"] as const) {
+  test(`Browse CV imports ${format} locally and preserves text on an invalid selection`, async ({
+    page,
+  }) => {
+    const cv =
+      "Verified quality engineering experience leading Java API automation and test strategy across multiple delivery teams.";
+    await page.route("**/api/job-search", (route) => {
+      expect(route.request().method()).toBe("GET");
+      return route.fulfill({
+        json: {
+          state: { profile: null, applications: [], activity: [] },
+          version: 0,
+          aiConfigured: true,
+        },
+      });
+    });
+    await page.goto("/");
+    await page.getByRole("button", { name: "My profile", exact: true }).click();
+    let buffer = Buffer.from(cv);
+    if (format === "docx") {
+      const { Document, Paragraph, Packer } = await import("docx");
+      buffer = await Packer.toBuffer(
+        new Document({ sections: [{ children: [new Paragraph(cv)] }] }),
+      );
+    }
+    if (format === "pdf") {
+      const stream = `BT /F1 10 Tf 30 750 Td (${cv}) Tj ET`;
+      const objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1200 800] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      ];
+      let pdf = "%PDF-1.4\n";
+      const offsets = [0];
+      objects.forEach((object, index) => {
+        offsets.push(pdf.length);
+        pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+      });
+      const xref = pdf.length;
+      pdf += `xref\n0 6\n0000000000 65535 f \n${offsets
+        .slice(1)
+        .map((offset) => String(offset).padStart(10, "0") + " 00000 n \n")
+        .join(
+          "",
+        )}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+      buffer = Buffer.from(pdf);
+    }
+    await page
+      .getByLabel("Browse CV")
+      .setInputFiles({
+        name: `cv.${format}`,
+        mimeType:
+          format === "pdf"
+            ? "application/pdf"
+            : format === "docx"
+              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : "text/plain",
+        buffer,
+      });
+    await expect(
+      page.getByLabel("Current CV and verified achievements"),
+    ).toHaveValue(cv);
+    await expect(page.getByRole("status")).toContainText(
+      `Imported cv.${format}`,
+    );
+    await page
+      .getByLabel("Browse CV")
+      .setInputFiles({
+        name: "cv.exe",
+        mimeType: "application/octet-stream",
+        buffer: Buffer.from("invalid"),
+      });
+    await expect(page.getByRole("alert")).toContainText("Choose a PDF");
+    await expect(
+      page.getByLabel("Current CV and verified achievements"),
+    ).toHaveValue(cv);
+  });
+}
