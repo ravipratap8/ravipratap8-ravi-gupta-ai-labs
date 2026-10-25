@@ -26,11 +26,13 @@ import {
   Cpu,
   LogOut,
   FileText,
+  BriefcaseBusiness,
 } from 'lucide-react';
 
 const DASHBOARD_STATS_REFRESH_EVENT = 'eventops:stats-refresh';
 
 const ICONS = {
+  BriefcaseBusiness,
   LayoutDashboard,
   CalendarDays,
   MessagesSquare,

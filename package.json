@@ -7,7 +7,10 @@
     "dev:no-reload": "next dev --hostname 0.0.0.0 --port 3000",
     "dev:webpack": "next dev --hostname 0.0.0.0 --port 3000",
     "build": "next build",
-    "start": "next start --hostname 0.0.0.0 --port 3000"
+    "start": "next start --hostname 0.0.0.0 --port 3000",
+    "typecheck": "tsc --noEmit",
+    "test:job-search": "vitest run --config vitest.job-search.config.ts",
+    "test:job-search-ui": "playwright test --config playwright.job-search.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.1.1",
@@ -86,15 +89,18 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.11",
+    "@playwright/test": "1.64.1",
     "@types/lodash": "4.17.24",
-    "@types/node": "20.14.10",
+    "@types/node": "22.20.5",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "autoprefixer": "10.4.19",
     "globals": "16.2.0",
     "postcss": "8",
     "tailwindcss": "3.4.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "5.0.5"
   },
   "resolutions": {
     "follow-redirects": "1.16.0",
