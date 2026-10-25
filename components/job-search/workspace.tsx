@@ -20,6 +20,7 @@ import {
 } from "@/lib/job-search/schema";
 import { emptyWorkspace } from "@/lib/job-search/repository";
 import type { JobWorkspace } from "@/lib/job-search/repository";
+import { extractCV } from "@/lib/job-search/cv-import";
 
 const field =
   "w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50";
@@ -126,6 +127,28 @@ export default function JobSearchWorkspace() {
   const [market, setMarket] = useState("New Zealand");
   const [filter, setFilter] = useState("");
   const job = snapshot.state.applications.find((a) => a.id === selected);
+
+  async function importCV(file: File) {
+    setBusy("import");
+    setError("");
+    setNotice("");
+    try {
+      const cv = await extractCV(file);
+      setProfile((current) => ({ ...current, cv }));
+      setNotice(
+        `Imported ${file.name}. Review the text below, then click Save profile.`,
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error &&
+          !/password|invalid|format|zip|decode/i.test(error.message)
+          ? error.message
+          : "Could not read this CV. Try an unlocked, text-based PDF, a Word (.docx) document or a UTF-8 text file. Your existing CV text was kept.",
+      );
+    } finally {
+      setBusy("");
+    }
+  }
 
   async function load() {
     setBusy("load");
@@ -267,7 +290,9 @@ export default function JobSearchWorkspace() {
               <LoaderCircle size={16} className="animate-spin" />
               {busy === "load"
                 ? "Loading workspace…"
-                : "Saving or generating. AI drafts can take up to two minutes…"}
+                : busy === "import"
+                  ? "Reading your CV…"
+                  : "Saving or generating. AI drafts can take up to two minutes…"}
             </span>
           ) : (
             notice
@@ -306,8 +331,8 @@ export default function JobSearchWorkspace() {
         </nav>
         {!snapshot.state.profile && loaded && (
           <p className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4 text-sm text-amber-100">
-            Start with My profile. Paste your current CV, career goals and
-            work-rights or location constraints. No personal career data is
+            Start with My profile. Browse or paste your current CV, career goals
+            and work-rights or location constraints. No personal career data is
             prefilled or published.
           </p>
         )}
@@ -325,6 +350,27 @@ export default function JobSearchWorkspace() {
               existing AI outputs and approvals, so export any drafts you want
               to retain first.
             </p>
+            <label className="block rounded-xl border border-slate-700 p-4 text-sm text-slate-300">
+              <span className="mb-3 block font-medium text-slate-100">
+                Browse CV
+              </span>
+              <input
+                type="file"
+                accept=".pdf,.docx,.txt"
+                disabled={!available}
+                className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-4 file:py-2 file:font-semibold file:text-slate-950 disabled:opacity-50"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void importCV(file);
+                }}
+              />
+              <span className="mt-3 block text-xs text-slate-400">
+                PDF, Word (.docx) or text. Maximum 5 MB. Read on your device;
+                extracted text is saved only when you click Save profile. Import
+                replaces the text below.
+              </span>
+            </label>
             <TextField
               label="Current CV and verified achievements (at least 80 characters)"
               multiline

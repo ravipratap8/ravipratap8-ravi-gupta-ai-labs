@@ -12,7 +12,7 @@ Routes: `/job-search` redirects to authenticated `/dashboard/job-search`. The da
 
 ## First use
 
-Sign in, open Job Search, save current CV and goals under My profile. Add explicit work rights, languages, salary expectations and location constraints where relevant. No personal profile is seeded into the public repository.
+Sign in, open Job Search, use Browse CV under My profile to choose a PDF, Word (.docx) or UTF-8 text file, or paste your CV, then save your profile and goals. Files are read locally in the browser; only reviewed extracted text is saved to Supabase. The original file is not uploaded. Imports support up to 5 MB, 20 PDF pages and 40,000 characters. Scanned/image-only or password-protected PDFs need a readable export or pasted text. Review reading order and missing content before saving. Add explicit work rights, languages, salary expectations and location constraints where relevant. No personal profile is seeded into the public repository.
 
 Use Add role to open SEEK, LinkedIn or Trade Me searches for NZ/Australia. Paste the full visible advert, role, company and optional HTTPS source URL. The source URL is stored for reference, never fetched by this API. Saved adverts are snapshots; verify availability on the original board.
 
