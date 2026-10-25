@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import {
+  importJobURL,
+  validateJobURL,
+  JobImportError,
+} from "@/lib/job-search/job-url";
 import { createClient } from "@/lib/supabase/server";
 import {
   JobSearchRepository,
@@ -22,6 +27,11 @@ export const runtime = "nodejs";
 export const maxDuration = 180;
 export const dynamic = "force-dynamic";
 const mutationSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("import-url"),
+    version: z.number().int().nonnegative(),
+    url: z.string().trim().min(1).max(2000),
+  }),
   z.object({
     action: z.literal("profile"),
     version: z.number().int().nonnegative(),
@@ -80,6 +90,8 @@ async function repository() {
   return new JobSearchRepository(db, user.id);
 }
 function failure(error: unknown) {
+  if (error instanceof JobImportError)
+    return json({ error: error.message }, 422);
   if (error instanceof WorkspaceConflict)
     return json(
       { error: "This workspace changed in another tab. Reload before saving." },
@@ -153,6 +165,28 @@ export async function POST(request: Request) {
     let { state, version } = await repo.read();
     if (version !== input.version) throw new WorkspaceConflict();
     const now = new Date().toISOString();
+    if (input.action === "import-url") {
+      validateJobURL(input.url);
+      if (
+        state.lastImportAt &&
+        Date.now() - Date.parse(state.lastImportAt) < 15000
+      )
+        return json(
+          { error: "Please wait 15 seconds between job imports." },
+          429,
+        );
+      state.lastImportAt = now;
+      const saved = await repo.save(state, version, {
+        at: now,
+        action: "import-url:started",
+      });
+      const imported = await importJobURL(input.url);
+      return json({
+        ...saved,
+        imported,
+        aiConfigured: !!process.env.OPENAI_API_KEY,
+      });
+    }
     let job: Application | undefined;
     if ("id" in input) {
       job = state.applications.find((a) => a.id === input.id);

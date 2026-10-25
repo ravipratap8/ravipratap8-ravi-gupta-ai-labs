@@ -7,6 +7,11 @@ const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   save: vi.fn(),
   generate: vi.fn(),
+  importURL: vi.fn(),
+}));
+vi.mock("@/lib/job-search/job-url", async (original) => ({
+  ...(await original<typeof import("../../lib/job-search/job-url")>()),
+  importJobURL: mocks.importURL,
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: mocks.getUser } }),
@@ -62,6 +67,56 @@ beforeEach(() => {
   });
 });
 describe("job search API boundaries", () => {
+  it("imports a job URL without an AI key, reserves cooldown and returns fields without saving a role", async () => {
+    mocks.importURL.mockResolvedValue({
+      company: "Example",
+      role: "QA Lead",
+      posting: "Description",
+      url: "https://example.com/job",
+      warnings: [],
+    });
+    const response = await post({
+      action: "import-url",
+      version,
+      url: "https://example.com/job",
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).imported.company).toBe("Example");
+    expect(state.applications).toEqual([]);
+    expect(state.lastImportAt).toBeTruthy();
+    expect(
+      (
+        await post({
+          action: "import-url",
+          version,
+          url: "https://example.com/job",
+        })
+      ).status,
+    ).toBe(429);
+    expect(mocks.importURL).toHaveBeenCalledTimes(1);
+  });
+  it("rejects unsafe URLs and signed-out imports before any network call", async () => {
+    expect(
+      (
+        await post({
+          action: "import-url",
+          version,
+          url: "https://127.0.0.1/job",
+        })
+      ).status,
+    ).toBe(422);
+    mocks.getUser.mockResolvedValue({ data: { user: null }, error: null });
+    expect(
+      (
+        await post({
+          action: "import-url",
+          version,
+          url: "https://example.com/job",
+        })
+      ).status,
+    ).toBe(401);
+    expect(mocks.importURL).not.toHaveBeenCalled();
+  });
   it("saves generated evaluation after the reservation and clears stale approvals", async () => {
     process.env.OPENAI_API_KEY = "fake-test-key";
     state.profile = {

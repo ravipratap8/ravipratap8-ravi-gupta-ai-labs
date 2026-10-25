@@ -227,34 +227,101 @@ for (const format of ["txt", "docx", "pdf"] as const) {
         )}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
       buffer = Buffer.from(pdf);
     }
-    await page
-      .getByLabel("Browse CV")
-      .setInputFiles({
-        name: `cv.${format}`,
-        mimeType:
-          format === "pdf"
-            ? "application/pdf"
-            : format === "docx"
-              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              : "text/plain",
-        buffer,
-      });
+    await page.getByLabel("Browse CV").setInputFiles({
+      name: `cv.${format}`,
+      mimeType:
+        format === "pdf"
+          ? "application/pdf"
+          : format === "docx"
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            : "text/plain",
+      buffer,
+    });
     await expect(
       page.getByLabel("Current CV and verified achievements"),
     ).toHaveValue(cv);
     await expect(page.getByRole("status")).toContainText(
       `Imported cv.${format}`,
     );
-    await page
-      .getByLabel("Browse CV")
-      .setInputFiles({
-        name: "cv.exe",
-        mimeType: "application/octet-stream",
-        buffer: Buffer.from("invalid"),
-      });
+    await page.getByLabel("Browse CV").setInputFiles({
+      name: "cv.exe",
+      mimeType: "application/octet-stream",
+      buffer: Buffer.from("invalid"),
+    });
     await expect(page.getByRole("alert")).toContainText("Choose a PDF");
     await expect(
       page.getByLabel("Current CV and verified achievements"),
     ).toHaveValue(cv);
   });
 }
+
+test("job URL fills editable fields without saving, and blocked imports preserve them", async ({
+  page,
+}) => {
+  const snapshot = {
+    state: { profile: null, applications: [], activity: [] },
+    version: 0,
+    aiConfigured: false,
+  };
+  let imports = 0;
+  const actions: string[] = [];
+  await page.route("**/api/job-search", (route) => {
+    if (route.request().method() === "GET")
+      return route.fulfill({ json: snapshot });
+    const body = route.request().postDataJSON();
+    actions.push(body.action);
+    expect(body.action).toBe("import-url");
+    if (++imports === 1)
+      return route.fulfill({
+        json: {
+          ...snapshot,
+          version: 1,
+          imported: {
+            company: "Imported Company",
+            role: "QA Lead",
+            posting:
+              "Imported description with release strategy, API automation and team mentoring responsibilities for a senior engineer.",
+            url: body.url,
+            warnings: [
+              "Review imported details against the original advert before saving.",
+            ],
+          },
+        },
+      });
+    return route.fulfill({
+      status: 422,
+      json: {
+        error:
+          "This site blocked access or requires sign-in. Open the advert and paste its text instead.",
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Add role", exact: true }).click();
+  await page
+    .getByLabel("Job advert URL (HTTPS)")
+    .fill("https://example.com/careers/qa-lead");
+  await page
+    .getByRole("button", { name: "Extract job details", exact: true })
+    .click();
+  await expect(page.getByLabel("Company", { exact: true })).toHaveValue(
+    "Imported Company",
+  );
+  await expect(page.getByLabel("Role title", { exact: true })).toHaveValue(
+    "QA Lead",
+  );
+  await expect(page.getByLabel("Full job advert")).toHaveValue(
+    /Imported description/,
+  );
+  await expect(
+    page.getByRole("button", { name: "Save role", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Extract job details", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("blocked access");
+  await expect(page.getByLabel("Company", { exact: true })).toHaveValue(
+    "Imported Company",
+  );
+  expect(actions).toEqual(["import-url", "import-url"]);
+});
