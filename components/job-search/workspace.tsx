@@ -128,6 +128,45 @@ export default function JobSearchWorkspace() {
   const [filter, setFilter] = useState("");
   const job = snapshot.state.applications.find((a) => a.id === selected);
 
+  async function importURL() {
+    setBusy("import-url");
+    setError("");
+    setNotice("");
+    try {
+      const result = (await api({
+        action: "import-url",
+        version: snapshot.version,
+        url: jobInput.url,
+      })) as Snapshot & {
+        imported: {
+          company: string;
+          role: string;
+          posting: string;
+          url: string;
+          warnings: string[];
+        };
+      };
+      setSnapshot(result);
+      setJobInput((current) => ({
+        ...current,
+        company: result.imported.company,
+        role: result.imported.role,
+        posting: result.imported.posting,
+        url: result.imported.url,
+      }));
+      setNotice("Job details imported. " + result.imported.warnings.join(" "));
+    } catch (error) {
+      setError((error as Error).message);
+      try {
+        setSnapshot(await api());
+      } catch {
+        /* Preserve existing form fields and display the error. */
+      }
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function importCV(file: File) {
     setBusy("import");
     setError("");
@@ -290,9 +329,11 @@ export default function JobSearchWorkspace() {
               <LoaderCircle size={16} className="animate-spin" />
               {busy === "load"
                 ? "Loading workspace…"
-                : busy === "import"
-                  ? "Reading your CV…"
-                  : "Saving or generating. AI drafts can take up to two minutes…"}
+                : busy === "import-url"
+                  ? "Reading the job advert…"
+                  : busy === "import"
+                    ? "Reading your CV…"
+                    : "Saving or generating. AI drafts can take up to two minutes…"}
             </span>
           ) : (
             notice
@@ -467,9 +508,10 @@ export default function JobSearchWorkspace() {
                 ))}
               </div>
               <p className="text-xs leading-5 text-slate-400">
-                Search opens the job board. Paste the visible advert here. This
-                version does not scrape boards, verify live vacancies or
-                automatically submit applications.
+                Find a specific advert, paste its URL and click Extract job
+                details. Some sites block access or require sign-in; you can
+                paste the advert when that happens. Applications are submitted
+                by you.
               </p>
             </section>
             <form
@@ -481,6 +523,25 @@ export default function JobSearchWorkspace() {
             >
               <h2 className="text-xl font-semibold">Save a role</h2>
               <TextField
+                label="Job advert URL (HTTPS)"
+                maxLength={2000}
+                value={jobInput.url}
+                onChange={(url) => setJobInput({ ...jobInput, url })}
+              />
+              <button
+                type="button"
+                className={button + " border-cyan-400 text-cyan-200"}
+                disabled={!available || !jobInput.url.trim()}
+                onClick={() => void importURL()}
+              >
+                Extract job details
+              </button>
+              <p className="text-xs text-slate-400">
+                Import fills the fields below for review, replacing their
+                current contents. Only the public job URL is sent to the site;
+                your CV stays private. You can also enter details manually.
+              </p>
+              <TextField
                 label="Company"
                 maxLength={200}
                 value={jobInput.company}
@@ -491,12 +552,6 @@ export default function JobSearchWorkspace() {
                 maxLength={200}
                 value={jobInput.role}
                 onChange={(role) => setJobInput({ ...jobInput, role })}
-              />
-              <TextField
-                label="Original job link (HTTPS, optional)"
-                maxLength={2000}
-                value={jobInput.url}
-                onChange={(url) => setJobInput({ ...jobInput, url })}
               />
               <TextField
                 label="Full job advert (plain text, at least 80 characters)"

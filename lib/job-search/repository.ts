@@ -13,6 +13,7 @@ export type JobWorkspace = {
   applications: Application[];
   activity: Activity[];
   lastAIAt?: string;
+  lastImportAt?: string;
 };
 export const emptyWorkspace = (): JobWorkspace => ({
   profile: null,
